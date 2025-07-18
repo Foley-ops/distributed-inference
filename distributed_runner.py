@@ -126,6 +126,12 @@ class LocalLoadingShardWrapper(nn.Module):
         model_type = config['model_type']
         shard_id = config['shard_id']
         
+        # Check if we have a split_block specified
+        split_block = config.get('split_block')
+        if split_block is not None:
+            # Look in the split-specific subdirectory
+            shards_dir = os.path.join(shards_dir, f"split_{split_block}")
+        
         # Try to load from pre-split weights first
         shard_filename = f"{model_type}_shard_{shard_id}_of_{config['total_shards']}.pth"
         shard_path = os.path.join(shards_dir, shard_filename)
@@ -470,8 +476,13 @@ class EnhancedDistributedModel(nn.Module):
         """Create configuration for each shard for local loading."""
         shard_configs = []
         
-        # Check if we have pre-split metadata
-        metadata_path = os.path.join(self.shards_dir, f"{self.model_type}_shards_metadata.json")
+        # First check if we have split-specific metadata
+        if self.split_block is not None:
+            split_dir = os.path.join(self.shards_dir, f"split_{self.split_block}")
+            metadata_path = os.path.join(split_dir, f"{self.model_type}_shards_metadata.json")
+        else:
+            # Check if we have pre-split metadata in root
+            metadata_path = os.path.join(self.shards_dir, f"{self.model_type}_shards_metadata.json")
         
         if os.path.exists(metadata_path):
             # Load metadata for pre-split weights
@@ -489,7 +500,8 @@ class EnhancedDistributedModel(nn.Module):
                     'shard_id': shard_info['shard_id'],
                     'total_shards': metadata['num_shards'],
                     'shard_filename': shard_info['filename'],
-                    'shard_path': shard_info['path']
+                    'shard_path': shard_info['path'],
+                    'split_block': self.split_block  # Add split_block for path resolution
                 }
                 
                 # Add shard structure if available
