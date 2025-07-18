@@ -691,6 +691,21 @@ class EnhancedDistributedModel(nn.Module):
                                f"(took {deploy_time:.3f}s)")
         
         self.logger.info(f"[DEPLOY SHARDS] Deployment complete - created {len(worker_rrefs)} RRefs")
+        
+        # CRITICAL: Wait for all workers to finish loading their shards
+        self.logger.info("[DEPLOY SHARDS] Waiting for all workers to finish loading shards...")
+        for i, rref in enumerate(worker_rrefs):
+            worker_name = self.workers[i % len(self.workers)]
+            try:
+                # Use to_here() to ensure the remote object is fully initialized
+                # This blocks until the worker has finished __init__ (including shard loading)
+                _ = rref.to_here()
+                self.logger.info(f"[DEPLOY SHARDS] Worker {worker_name} confirmed shard {i} is loaded")
+            except Exception as e:
+                self.logger.error(f"[DEPLOY SHARDS] Failed to verify shard {i} on {worker_name}: {e}")
+                raise
+        
+        self.logger.info("[DEPLOY SHARDS] All workers have finished loading their shards")
         return worker_rrefs
     
     def _setup_pipeline(self):
