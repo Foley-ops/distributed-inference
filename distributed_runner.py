@@ -586,6 +586,10 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             logger.info(f"Final accuracy: {final_accuracy:.2f}%")
             logger.info(f"Overall throughput: {overall_ips:.2f} images/sec")
             
+            # Calculate actual per-image latency from end-to-end time
+            actual_latency_ms = (elapsed_time * 1000.0) / total_images if total_images > 0 else 0.0
+            logger.info(f"Actual per-image latency: {actual_latency_ms:.2f}ms")
+            
             # Collect worker summaries
             logger.info("Collecting enhanced metrics from workers...")
             worker_summaries = []
