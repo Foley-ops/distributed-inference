@@ -27,7 +27,6 @@ import socket
 import sys
 from typing import List, Dict, Any, Optional
 import json
-import hashlib
 from collections import OrderedDict
 import queue
 import threading
@@ -101,7 +100,7 @@ class EnhancedShardWrapper(nn.Module):
 
 
 class LocalLoadingShardWrapper(nn.Module):
-    """Shard wrapper that loads weights locally instead of receiving them."""
+    """Shard wrapper that loads ONLY shard weights from pre-split files."""
     
     def __init__(self, shard_config: Dict[str, Any], shard_id: int, 
                  metrics_collector: Optional[EnhancedMetricsCollector] = None):
@@ -121,8 +120,81 @@ class LocalLoadingShardWrapper(nn.Module):
         self.module = self._load_local_shard(shard_config)
     
     def _load_local_shard(self, config: Dict[str, Any]) -> nn.Module:
-        """Load only the required shard from local weights."""
-        # Load full model from local disk
+        """Load ONLY the shard weights from pre-split weight files."""
+        # Check if we have pre-split weights
+        shards_dir = config.get('shards_dir', './model_shards')
+        model_type = config['model_type']
+        shard_id = config['shard_id']
+        
+        # Try to load from pre-split weights first
+        shard_filename = f"{model_type}_shard_{shard_id}_of_{config['total_shards']}.pth"
+        shard_path = os.path.join(shards_dir, shard_filename)
+        
+        if os.path.exists(shard_path):
+            logging.info(f"Loading pre-split shard from {shard_path}")
+            
+            # Load the shard checkpoint
+            checkpoint = torch.load(shard_path, map_location='cpu')
+            
+            # Recreate the shard structure based on metadata
+            if 'shard_structure' in config:
+                # Use provided structure
+                shard = self._create_shard_from_structure(config['shard_structure'])
+            else:
+                # Fall back to loading from full model (for backward compatibility)
+                logging.warning(f"No shard structure provided, falling back to full model loading")
+                return self._load_from_full_model(config)
+            
+            # Load the state dict
+            shard.load_state_dict(checkpoint['state_dict'])
+            logging.info(f"Successfully loaded shard {shard_id} weights")
+            
+            return shard.to("cpu")
+        else:
+            # Fall back to original method if no pre-split weights
+            logging.warning(f"Pre-split weights not found at {shard_path}, loading from full model")
+            return self._load_from_full_model(config)
+    
+    def _create_shard_from_structure(self, structure: List[Dict[str, Any]]) -> nn.Module:
+        """Recreate shard module from structure definition."""
+        shard = nn.Sequential()
+        
+        for layer_def in structure:
+            layer_type = layer_def['type']
+            layer_args = layer_def.get('args', {})
+            layer_name = layer_def.get('name', f"layer_{len(shard)}")
+            
+            # Create layer based on type
+            if layer_type == 'Conv2d':
+                layer = nn.Conv2d(**layer_args)
+            elif layer_type == 'BatchNorm2d':
+                layer = nn.BatchNorm2d(**layer_args)
+            elif layer_type == 'ReLU' or layer_type == 'ReLU6':
+                layer = getattr(nn, layer_type)(**layer_args)
+            elif layer_type == 'Linear':
+                layer = nn.Linear(**layer_args)
+            elif layer_type == 'AdaptiveAvgPool2d':
+                layer = nn.AdaptiveAvgPool2d(**layer_args)
+            elif layer_type == 'Flatten':
+                layer = nn.Flatten(**layer_args)
+            elif layer_type == 'Sequential':
+                # Recursively create sequential
+                sub_layers = self._create_shard_from_structure(layer_args.get('layers', []))
+                layer = sub_layers
+            else:
+                # Try to get from nn module
+                layer_class = getattr(nn, layer_type, None)
+                if layer_class:
+                    layer = layer_class(**layer_args)
+                else:
+                    raise ValueError(f"Unknown layer type: {layer_type}")
+            
+            shard.add_module(layer_name, layer)
+        
+        return shard
+    
+    def _load_from_full_model(self, config: Dict[str, Any]) -> nn.Module:
+        """Fall back to loading from full model (original method)."""
         model_loader = ModelLoader(config.get('models_dir', './models'))
         full_model = model_loader.load_model(config['model_type'], config.get('num_classes', 10))
         
@@ -182,98 +254,7 @@ class LocalLoadingShardWrapper(nn.Module):
         return [RRef(p) for p in self.parameters()]
 
 
-class CachedShardWrapper(LocalLoadingShardWrapper):
-    """Shard wrapper with intelligent caching for repeated inference patterns."""
-    
-    def __init__(self, shard_config: Dict[str, Any], shard_id: int,
-                 metrics_collector: Optional[EnhancedMetricsCollector] = None,
-                 cache_size: int = 100):
-        super().__init__(shard_config, shard_id, metrics_collector)
-        self.cache_size = cache_size
-        self.cache = OrderedDict()  # LRU cache
-        self.cache_hits = 0
-        self.cache_misses = 0
-        
-    def _tensor_hash(self, tensor: torch.Tensor) -> str:
-        """Create a hash for tensor caching."""
-        # For small tensors, hash the entire content
-        if tensor.numel() < 1000:
-            return hashlib.md5(tensor.cpu().numpy().tobytes()).hexdigest()
-        
-        # For large tensors, hash shape + sample of values
-        shape_str = str(tensor.shape)
-        # Sample corners and center
-        flat = tensor.flatten()
-        samples = [
-            flat[0].item(),
-            flat[-1].item(),
-            flat[tensor.numel()//2].item(),
-            tensor.mean().item(),
-            tensor.std().item()
-        ]
-        sample_str = str(samples)
-        
-        return hashlib.md5(f"{shape_str}_{sample_str}".encode()).hexdigest()
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with caching."""
-        if not isinstance(x, torch.Tensor):
-            raise TypeError(f"Expected torch.Tensor but got {type(x)}")
-            
-        # Generate cache key
-        cache_key = self._tensor_hash(x)
-        
-        # Check cache
-        if cache_key in self.cache:
-            self.cache_hits += 1
-            # Move to end (LRU)
-            self.cache.move_to_end(cache_key)
-            cached_output = self.cache[cache_key]
-            
-            # Log cache performance periodically
-            if (self.cache_hits + self.cache_misses) % 100 == 0:
-                hit_rate = self.cache_hits / (self.cache_hits + self.cache_misses) * 100
-                logging.info(f"[Shard {self.shard_id}] Cache hit rate: {hit_rate:.1f}%")
-            
-            # Return copy to prevent cache corruption
-            return cached_output.clone()
-        
-        # Cache miss - compute normally
-        self.cache_misses += 1
-        
-        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} processing tensor shape: {x.shape}")
-        
-        x = x.to("cpu")
-        start_time = time.time()
-        
-        # Forward pass
-        with torch.no_grad():
-            output = self.module(x).cpu()
-        
-        end_time = time.time()
-        
-        # Store in cache
-        if len(self.cache) >= self.cache_size:
-            # Remove oldest (first) item
-            self.cache.popitem(last=False)
-        
-        # Store output
-        self.cache[cache_key] = output.clone()
-        
-        # Record stage metrics
-        if self.metrics_collector:
-            self.metrics_collector.record_pipeline_stage(
-                batch_id=0,
-                stage_id=self.shard_id,
-                stage_name=f"shard_{self.shard_id}",
-                start_time=start_time,
-                end_time=end_time,
-                input_size_bytes=x.numel() * x.element_size(),
-                output_size_bytes=output.numel() * output.element_size()
-            )
-        
-        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} completed: {output.shape}")
-        return output
+# CachedShardWrapper removed - caching not needed for pass-through devices
 
 
 class PrefetchDataLoader:
@@ -329,8 +310,7 @@ class EnhancedDistributedModel(nn.Module):
                  num_classes: int = 10, metrics_collector: Optional[EnhancedMetricsCollector] = None,
                  use_intelligent_splitting: bool = True, use_pipelining: bool = False,
                  models_dir: str = ".", split_block: Optional[int] = None,
-                 use_local_loading: bool = False, enable_cache: bool = False,
-                 cache_size: int = 100):
+                 use_local_loading: bool = True, shards_dir: str = "./model_shards"):
         super().__init__()
         self.model_type = model_type
         self.num_splits = num_splits
@@ -342,8 +322,7 @@ class EnhancedDistributedModel(nn.Module):
         self.models_dir = models_dir
         self.split_block = split_block
         self.use_local_loading = use_local_loading
-        self.enable_cache = enable_cache
-        self.cache_size = cache_size
+        self.shards_dir = shards_dir
         
         self.logger = logging.getLogger(__name__)
         
@@ -491,62 +470,103 @@ class EnhancedDistributedModel(nn.Module):
         """Create configuration for each shard for local loading."""
         shard_configs = []
         
-        if len(self.shards) == 2 and self.model_type.lower() == 'mobilenetv2':
-            # For MobileNetV2 with 2 shards, we know the split
-            split_point = self.split_block if self.split_block is not None else 8
+        # Check if we have pre-split metadata
+        metadata_path = os.path.join(self.shards_dir, f"{self.model_type}_shards_metadata.json")
+        
+        if os.path.exists(metadata_path):
+            # Load metadata for pre-split weights
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
             
-            # Shard 1: features[:split_point]
-            shard1_config = {
-                'model_type': self.model_type,
-                'models_dir': self.models_dir,
-                'num_classes': self.num_classes,
-                'layers': []
-            }
-            for i in range(split_point):
-                shard1_config['layers'].append({
-                    'name': f'features_{i}',
-                    'path': f'features.{i}'
-                })
-            shard_configs.append(shard1_config)
+            self.logger.info(f"Found pre-split metadata at {metadata_path}")
             
-            # Shard 2: features[split_point:] + pooling + classifier
-            shard2_config = {
-                'model_type': self.model_type,
-                'models_dir': self.models_dir,
-                'num_classes': self.num_classes,
-                'layers': []
-            }
-            # Get total number of feature blocks
-            total_blocks = len(list(self.original_model.features.children()))
-            for i in range(split_point, total_blocks):
-                shard2_config['layers'].append({
-                    'name': f'features_{i}',
-                    'path': f'features.{i}'
-                })
-            # Add pooling and classifier layers as modules
-            shard2_config['layers'].extend([
-                {'name': 'pool', 'module': nn.AdaptiveAvgPool2d((1, 1))},
-                {'name': 'flatten', 'module': nn.Flatten()},
-                {'name': 'classifier', 'path': 'classifier'}
-            ])
-            shard_configs.append(shard2_config)
-            
-        else:
-            # For other cases, create generic configs based on existing shards
-            for i, shard in enumerate(self.shards):
+            for shard_info in metadata['shards']:
                 config = {
                     'model_type': self.model_type,
                     'models_dir': self.models_dir,
+                    'shards_dir': self.shards_dir,
                     'num_classes': self.num_classes,
+                    'shard_id': shard_info['shard_id'],
+                    'total_shards': metadata['num_shards'],
+                    'shard_filename': shard_info['filename'],
+                    'shard_path': shard_info['path']
+                }
+                
+                # Add shard structure if available
+                if 'structure' in shard_info:
+                    config['shard_structure'] = shard_info['structure']
+                
+                shard_configs.append(config)
+            
+        else:
+            # Fall back to original method for backward compatibility
+            self.logger.warning(f"No pre-split metadata found at {metadata_path}")
+            
+            if len(self.shards) == 2 and self.model_type.lower() == 'mobilenetv2':
+                # For MobileNetV2 with 2 shards, we know the split
+                split_point = self.split_block if self.split_block is not None else 8
+                
+                # Shard 1: features[:split_point]
+                shard1_config = {
+                    'model_type': self.model_type,
+                    'models_dir': self.models_dir,
+                    'shards_dir': self.shards_dir,
+                    'num_classes': self.num_classes,
+                    'shard_id': 0,
+                    'total_shards': 2,
                     'layers': []
                 }
-                # Add the shard modules directly (fallback approach)
-                for j, module in enumerate(shard.children()):
-                    config['layers'].append({
-                        'name': f'layer_{j}',
-                        'module': module
+                for i in range(split_point):
+                    shard1_config['layers'].append({
+                        'name': f'features_{i}',
+                        'path': f'features.{i}'
                     })
-                shard_configs.append(config)
+                shard_configs.append(shard1_config)
+                
+                # Shard 2: features[split_point:] + pooling + classifier
+                shard2_config = {
+                    'model_type': self.model_type,
+                    'models_dir': self.models_dir,
+                    'shards_dir': self.shards_dir,
+                    'num_classes': self.num_classes,
+                    'shard_id': 1,
+                    'total_shards': 2,
+                    'layers': []
+                }
+                # Get total number of feature blocks
+                total_blocks = len(list(self.original_model.features.children()))
+                for i in range(split_point, total_blocks):
+                    shard2_config['layers'].append({
+                        'name': f'features_{i}',
+                        'path': f'features.{i}'
+                    })
+                # Add pooling and classifier layers as modules
+                shard2_config['layers'].extend([
+                    {'name': 'pool', 'module': nn.AdaptiveAvgPool2d((1, 1))},
+                    {'name': 'flatten', 'module': nn.Flatten()},
+                    {'name': 'classifier', 'path': 'classifier'}
+                ])
+                shard_configs.append(shard2_config)
+                
+            else:
+                # For other cases, create generic configs based on existing shards
+                for i, shard in enumerate(self.shards):
+                    config = {
+                        'model_type': self.model_type,
+                        'models_dir': self.models_dir,
+                        'shards_dir': self.shards_dir,
+                        'num_classes': self.num_classes,
+                        'shard_id': i,
+                        'total_shards': len(self.shards),
+                        'layers': []
+                    }
+                    # Add the shard modules directly (fallback approach)
+                    for j, module in enumerate(shard.children()):
+                        config['layers'].append({
+                            'name': f'layer_{j}',
+                            'module': module
+                        })
+                    shard_configs.append(config)
         
         return shard_configs
     
@@ -558,28 +578,18 @@ class EnhancedDistributedModel(nn.Module):
             # Create shard configurations for local loading
             shard_configs = self._create_shard_configs()
             
-            # Choose wrapper class based on caching
-            if self.enable_cache:
-                wrapper_class = CachedShardWrapper
-            else:
-                wrapper_class = LocalLoadingShardWrapper
+            # Always use LocalLoadingShardWrapper (no caching)
+            wrapper_class = LocalLoadingShardWrapper
             
             for i, config in enumerate(shard_configs):
                 worker_name = self.workers[i % len(self.workers)]
                 
                 # Deploy with local loading
-                if self.enable_cache:
-                    rref = rpc.remote(
-                        worker_name,
-                        wrapper_class,
-                        args=(config, i, None, self.cache_size)
-                    )
-                else:
-                    rref = rpc.remote(
-                        worker_name,
-                        wrapper_class,
-                        args=(config, i, None)
-                    )
+                rref = rpc.remote(
+                    worker_name,
+                    wrapper_class,
+                    args=(config, i, None)
+                )
                 worker_rrefs.append(rref)
                 
                 self.logger.info(f"Deployed shard {i} config to worker {worker_name} (local loading)")
@@ -679,9 +689,8 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                           num_splits: int, metrics_dir: str, use_intelligent_splitting: bool = True,
                           use_pipelining: bool = False, num_threads: int = 4,
                           models_dir: str = ".", split_block: Optional[int] = None,
-                          use_local_loading: bool = False, enable_cache: bool = False,
-                          cache_size: int = 100, enable_prefetch: bool = False,
-                          prefetch_batches: int = 2):
+                          use_local_loading: bool = True, shards_dir: str = "./model_shards",
+                          enable_prefetch: bool = False, prefetch_batches: int = 2):
     """
     Run enhanced distributed inference with profiling and pipelining.
     """
@@ -759,8 +768,7 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 models_dir=models_dir,
                 split_block=split_block,
                 use_local_loading=use_local_loading,
-                enable_cache=enable_cache,
-                cache_size=cache_size
+                shards_dir=shards_dir
             )
             
             logger.info("Enhanced distributed model created successfully")
@@ -1053,12 +1061,10 @@ def main():
                        help="Specific block number to split at (for MobileNetV2)")
     
     # New optimization features
-    parser.add_argument("--use-local-loading", action="store_true", default=False,
-                       help="Load model weights locally on workers instead of transferring")
-    parser.add_argument("--enable-cache", action="store_true", default=False,
-                       help="Enable tensor caching for repeated inputs")
-    parser.add_argument("--cache-size", type=int, default=100,
-                       help="Maximum number of cached tensors per worker")
+    parser.add_argument("--use-local-loading", action="store_true", default=True,
+                       help="Load model weights locally on workers from pre-split files")
+    parser.add_argument("--shards-dir", type=str, default="./model_shards",
+                       help="Directory containing pre-split model shards")
     parser.add_argument("--enable-prefetch", action="store_true", default=False,
                        help="Enable data prefetching for improved throughput")
     parser.add_argument("--prefetch-batches", type=int, default=2,
@@ -1091,8 +1097,7 @@ def main():
         models_dir=args.models_dir,
         split_block=args.split_block,
         use_local_loading=args.use_local_loading,
-        enable_cache=args.enable_cache,
-        cache_size=args.cache_size,
+        shards_dir=args.shards_dir,
         enable_prefetch=args.enable_prefetch,
         prefetch_batches=args.prefetch_batches
     )

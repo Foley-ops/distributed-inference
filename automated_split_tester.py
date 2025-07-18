@@ -157,8 +157,6 @@ class AutomatedSplitTester:
         if use_optimizations:
             cmd.extend([
                 "--use-local-loading",
-                "--enable-cache",
-                "--cache-size", "100",
                 "--enable-prefetch",
                 "--prefetch-batches", "2"
             ])
