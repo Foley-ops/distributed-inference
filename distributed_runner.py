@@ -108,60 +108,85 @@ class LocalLoadingShardWrapper(nn.Module):
         self.shard_id = shard_id
         self.metrics_collector = metrics_collector
         
+        logger = logging.getLogger(__name__)
+        logger.info(f"[WORKER INIT] Initializing LocalLoadingShardWrapper for shard {shard_id}")
+        logger.info(f"[WORKER INIT] Config received: model_type={shard_config.get('model_type')}, "
+                   f"split_block={shard_config.get('split_block')}, "
+                   f"shards_dir={shard_config.get('shards_dir')}")
+        
         # Create metrics collector if none provided (for workers)
         if self.metrics_collector is None:
             try:
                 rank = rpc.get_worker_info().id
+                logger.info(f"[WORKER INIT] Creating metrics collector for rank {rank}")
             except:
                 rank = 0
+                logger.warning("[WORKER INIT] Could not get RPC worker info, using rank 0")
             self.metrics_collector = EnhancedMetricsCollector(rank)
         
         # Load the shard locally based on config
+        logger.info(f"[WORKER INIT] Starting shard loading for shard {shard_id}")
         self.module = self._load_local_shard(shard_config)
+        logger.info(f"[WORKER INIT] Shard {shard_id} loading completed successfully")
     
     def _load_local_shard(self, config: Dict[str, Any]) -> nn.Module:
         """Load ONLY the shard weights from pre-split weight files."""
+        logger = logging.getLogger(__name__)
+        logger.info(f"[SHARD LOADING] _load_local_shard called for shard {config['shard_id']}")
+        
         # Check if we have pre-split weights
         shards_dir = config.get('shards_dir', './model_shards')
         model_type = config['model_type']
         shard_id = config['shard_id']
+        
+        logger.info(f"[SHARD LOADING] Base shards_dir: {shards_dir}")
+        logger.info(f"[SHARD LOADING] Model type: {model_type}, Shard ID: {shard_id}")
         
         # Check if we have a split_block specified
         split_block = config.get('split_block')
         if split_block is not None:
             # Look in the split-specific subdirectory
             shards_dir = os.path.join(shards_dir, f"split_{split_block}")
+            logger.info(f"[SHARD LOADING] Split block specified: {split_block}, updated shards_dir: {shards_dir}")
         
         # Try to load from pre-split weights first
         shard_filename = f"{model_type}_shard_{shard_id}_of_{config['total_shards']}.pth"
         shard_path = os.path.join(shards_dir, shard_filename)
         
+        logger.info(f"[SHARD LOADING] Looking for pre-split shard at: {shard_path}")
+        
         if os.path.exists(shard_path):
-            logging.info(f"Loading pre-split shard from {shard_path}")
+            logger.info(f"[SHARD LOADING] Found pre-split shard file, loading from {shard_path}")
             
             # Load the shard checkpoint
+            logger.info(f"[SHARD LOADING] Starting torch.load for {shard_path}")
+            load_start = time.time()
             checkpoint = torch.load(shard_path, map_location='cpu')
+            load_time = time.time() - load_start
+            logger.info(f"[SHARD LOADING] torch.load completed in {load_time:.3f}s, checkpoint keys: {checkpoint.keys()}")
             
             # The checkpoint should contain the model directly
             if 'model' in checkpoint:
                 # Load the pre-built shard model
                 shard = checkpoint['model']
-                logging.info(f"Successfully loaded shard {shard_id} module")
+                logger.info(f"[SHARD LOADING] Successfully loaded shard {shard_id} module from 'model' key")
+                logger.info(f"[SHARD LOADING] Shard type: {type(shard)}, moving to CPU")
             elif 'state_dict' in checkpoint:
                 # If we have state_dict but no structure, try to infer from the checkpoint
-                logging.info(f"Checkpoint contains state_dict, attempting to load directly")
+                logger.info(f"[SHARD LOADING] Checkpoint contains state_dict, attempting to load directly")
                 # For now, we'll need to fall back to the full model approach
                 # In the future, we should save the model structure with the checkpoint
-                logging.warning(f"No model structure in checkpoint, falling back to full model loading")
+                logger.warning(f"[SHARD LOADING] No model structure in checkpoint, falling back to full model loading")
                 return self._load_from_full_model(config)
             else:
-                logging.error(f"Invalid checkpoint format: {checkpoint.keys()}")
+                logger.error(f"[SHARD LOADING] Invalid checkpoint format: {checkpoint.keys()}")
                 return self._load_from_full_model(config)
             
+            logger.info(f"[SHARD LOADING] Moving shard to CPU and returning")
             return shard.to("cpu")
         else:
             # Fall back to original method if no pre-split weights
-            logging.warning(f"Pre-split weights not found at {shard_path}, loading from full model")
+            logger.warning(f"[SHARD LOADING] Pre-split weights not found at {shard_path}, loading from full model")
             return self._load_from_full_model(config)
     
     def _create_shard_from_structure(self, structure: List[Dict[str, Any]]) -> nn.Module:
@@ -229,12 +254,15 @@ class LocalLoadingShardWrapper(nn.Module):
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass with enhanced metrics collection."""
+        logger = logging.getLogger(__name__)
+        
         if not isinstance(x, torch.Tensor):
             raise TypeError(f"Expected torch.Tensor but got {type(x)}")
         
-        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} processing tensor shape: {x.shape}")
+        logger.info(f"[FORWARD PASS] [{socket.gethostname()}] Shard {self.shard_id} received tensor shape: {x.shape}")
         
         x = x.to("cpu")
+        logger.info(f"[FORWARD PASS] Shard {self.shard_id} starting computation")
         start_time = time.time()
         
         # Forward pass
@@ -242,6 +270,9 @@ class LocalLoadingShardWrapper(nn.Module):
             output = self.module(x).cpu()
         
         end_time = time.time()
+        compute_time = (end_time - start_time) * 1000  # Convert to ms
+        
+        logger.info(f"[FORWARD PASS] Shard {self.shard_id} computation completed in {compute_time:.2f}ms")
         
         # Record stage metrics
         if self.metrics_collector:
@@ -255,7 +286,7 @@ class LocalLoadingShardWrapper(nn.Module):
                 output_size_bytes=output.numel() * output.element_size()
             )
         
-        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} completed: {output.shape}")
+        logger.info(f"[FORWARD PASS] [{socket.gethostname()}] Shard {self.shard_id} returning output shape: {output.shape}")
         return output
     
     def parameter_rrefs(self):
@@ -335,30 +366,47 @@ class EnhancedDistributedModel(nn.Module):
         
         self.logger = logging.getLogger(__name__)
         
+        self.logger.info("[ORCHESTRATOR INIT] ========== Starting EnhancedDistributedModel initialization ==========")
+        self.logger.info(f"[ORCHESTRATOR INIT] Model type: {model_type}, Num splits: {num_splits}")
+        self.logger.info(f"[ORCHESTRATOR INIT] Workers: {workers}")
+        self.logger.info(f"[ORCHESTRATOR INIT] Split block: {split_block}, Use local loading: {use_local_loading}")
+        self.logger.info(f"[ORCHESTRATOR INIT] Use intelligent splitting: {use_intelligent_splitting}")
+        self.logger.info(f"[ORCHESTRATOR INIT] Use pipelining: {use_pipelining}")
+        
         # Load model
+        self.logger.info(f"[ORCHESTRATOR INIT] Loading model from {models_dir}")
         model_loader = ModelLoader(models_dir)
         self.original_model = model_loader.load_model(model_type, num_classes)
+        self.logger.info(f"[ORCHESTRATOR INIT] Model loaded successfully: {type(self.original_model)}")
         
         # Profile model if using intelligent splitting
         self.model_profile = None
         if self.use_intelligent_splitting:
+            self.logger.info("[ORCHESTRATOR INIT] Starting model profiling for intelligent splitting")
             self._profile_model(model_loader)
         
         # Split model
+        self.logger.info("[ORCHESTRATOR INIT] Starting model splitting")
         self.shards = self._split_model()
+        self.logger.info(f"[ORCHESTRATOR INIT] Model split into {len(self.shards)} shards")
         
         # Deploy shards to workers
         if len(self.workers) > 0:
+            self.logger.info(f"[ORCHESTRATOR INIT] Deploying shards to {len(self.workers)} workers")
             self.worker_rrefs = self._deploy_shards()
+            self.logger.info(f"[ORCHESTRATOR INIT] Successfully deployed {len(self.worker_rrefs)} shard RRefs")
         else:
             # No workers - run locally
             self.worker_rrefs = []
-            self.logger.warning("No workers available - model will run locally without distribution")
+            self.logger.warning("[ORCHESTRATOR INIT] No workers available - model will run locally without distribution")
         
         # Setup pipeline if enabled
         self.pipeline_manager = None
         if self.use_pipelining:
+            self.logger.info("[ORCHESTRATOR INIT] Setting up pipeline manager")
             self._setup_pipeline()
+        
+        self.logger.info("[ORCHESTRATOR INIT] ========== EnhancedDistributedModel initialization complete ==========")
     
     def _profile_model(self, model_loader: ModelLoader):
         """Profile the model for intelligent splitting."""
@@ -587,11 +635,14 @@ class EnhancedDistributedModel(nn.Module):
     
     def _deploy_shards(self) -> List[RRef]:
         """Deploy shards to worker nodes."""
+        self.logger.info("[DEPLOY SHARDS] Starting shard deployment")
         worker_rrefs = []
         
         if self.use_local_loading:
+            self.logger.info("[DEPLOY SHARDS] Using local loading mode - creating shard configurations")
             # Create shard configurations for local loading
             shard_configs = self._create_shard_configs()
+            self.logger.info(f"[DEPLOY SHARDS] Created {len(shard_configs)} shard configurations")
             
             # Always use LocalLoadingShardWrapper (no caching)
             wrapper_class = LocalLoadingShardWrapper
@@ -599,30 +650,47 @@ class EnhancedDistributedModel(nn.Module):
             for i, config in enumerate(shard_configs):
                 worker_name = self.workers[i % len(self.workers)]
                 
+                self.logger.info(f"[DEPLOY SHARDS] Deploying shard {i} to worker {worker_name}")
+                self.logger.info(f"[DEPLOY SHARDS] Config: shard_id={config.get('shard_id')}, "
+                               f"model_type={config.get('model_type')}, "
+                               f"split_block={config.get('split_block')}")
+                
                 # Deploy with local loading
+                deploy_start = time.time()
                 rref = rpc.remote(
                     worker_name,
                     wrapper_class,
                     args=(config, i, None)
                 )
+                deploy_time = time.time() - deploy_start
+                
                 worker_rrefs.append(rref)
                 
-                self.logger.info(f"Deployed shard {i} config to worker {worker_name} (local loading)")
+                self.logger.info(f"[DEPLOY SHARDS] Successfully deployed shard {i} to {worker_name} "
+                               f"(took {deploy_time:.3f}s)")
         else:
             # Original deployment method
+            self.logger.info("[DEPLOY SHARDS] Using traditional deployment - sending shard objects")
             for i, shard in enumerate(self.shards):
                 worker_name = self.workers[i % len(self.workers)]
                 
+                self.logger.info(f"[DEPLOY SHARDS] Deploying shard {i} object to worker {worker_name}")
+                
                 # Create remote shard wrapper
+                deploy_start = time.time()
                 rref = rpc.remote(
                     worker_name,
                     EnhancedShardWrapper,
                     args=(shard, i, None)  # Workers create their own metrics collectors
                 )
+                deploy_time = time.time() - deploy_start
+                
                 worker_rrefs.append(rref)
                 
-                self.logger.info(f"Deployed shard {i} to worker {worker_name}")
+                self.logger.info(f"[DEPLOY SHARDS] Successfully deployed shard {i} to {worker_name} "
+                               f"(took {deploy_time:.3f}s)")
         
+        self.logger.info(f"[DEPLOY SHARDS] Deployment complete - created {len(worker_rrefs)} RRefs")
         return worker_rrefs
     
     def _setup_pipeline(self):
@@ -644,24 +712,41 @@ class EnhancedDistributedModel(nn.Module):
     
     def forward(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
         """Forward pass through the distributed model."""
+        self.logger.info(f"[MODEL FORWARD] Called with input shape: {x.shape}, batch_id: {batch_id}")
+        
         if self.use_pipelining and self.pipeline_manager:
             # Use pipelined execution
+            self.logger.info("[MODEL FORWARD] Using pipelined execution path")
             return self.pipeline_manager.process_batch_rpc_pipelined(x)
         else:
             # Sequential execution (original approach)
+            self.logger.info("[MODEL FORWARD] Using sequential execution path")
             return self._forward_sequential(x, batch_id)
     
     def _forward_sequential(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
         """Sequential forward pass (non-pipelined)."""
+        self.logger.info(f"[FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id={batch_id}")
+        self.logger.info(f"[FORWARD SEQUENTIAL] Input tensor shape: {x.shape}")
+        
         current_tensor = x
         
         for i, shard_rref in enumerate(self.worker_rrefs):
-            self.logger.debug(f"Processing through shard {i}")
+            self.logger.info(f"[FORWARD SEQUENTIAL] Processing shard {i}")
+            
+            # Log tensor details before RPC
+            self.logger.info(f"[FORWARD SEQUENTIAL] Sending tensor shape {current_tensor.shape} to shard {i}")
             
             # Measure RPC latency (includes computation)
             start_time = time.time()
+            self.logger.info(f"[FORWARD SEQUENTIAL] Making RPC call to shard {i}")
+            
             current_tensor = shard_rref.rpc_sync().forward(current_tensor)
+            
             end_time = time.time()
+            rpc_time = (end_time - start_time) * 1000  # Convert to ms
+            
+            self.logger.info(f"[FORWARD SEQUENTIAL] RPC call to shard {i} completed in {rpc_time:.2f}ms")
+            self.logger.info(f"[FORWARD SEQUENTIAL] Received tensor shape from shard {i}: {current_tensor.shape}")
             
             # Record RPC metrics (computation + network)
             if self.metrics_collector:
@@ -675,9 +760,15 @@ class EnhancedDistributedModel(nn.Module):
                 # The rest is computation time
                 estimated_computation_ms = max(0, rpc_total_ms - estimated_network_ms)
                 
+                self.logger.info(f"[FORWARD SEQUENTIAL] Shard {i} metrics: "
+                               f"RPC total={rpc_total_ms:.2f}ms, "
+                               f"Est. network={estimated_network_ms:.2f}ms, "
+                               f"Est. computation={estimated_computation_ms:.2f}ms")
+                
                 # Record as "RPC latency" not "network latency" 
                 self.metrics_collector.record_network_metrics(rpc_total_ms, estimated_network_ms)
         
+        self.logger.info(f"[FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: {current_tensor.shape}")
         return current_tensor
     
     def parameter_rrefs(self):
@@ -753,25 +844,36 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
     rpc_initialized = False
     
     if rank == 0:  # Master node
-        logger.info("Initializing master node with enhanced features")
-        logger.info(f"Loading dataset: {dataset}")
+        logger.info("[MASTER] ========================================")
+        logger.info("[MASTER] Initializing master node with enhanced features")
+        logger.info(f"[MASTER] Dataset: {dataset}, Batch size: {batch_size}")
+        logger.info(f"[MASTER] Model: {model_type}, Num splits: {num_splits}")
+        logger.info(f"[MASTER] World size: {world_size}, Num threads: {num_threads}")
+        logger.info("[MASTER] ========================================")
+        
         try:
             # Initialize RPC
+            logger.info(f"[MASTER RPC] Initializing RPC backend on port {master_port}")
             rpc_backend_options = rpc.TensorPipeRpcBackendOptions(
                 num_worker_threads=num_threads,
                 rpc_timeout=3600,
                 init_method=f"tcp://0.0.0.0:{master_port}"
             )
             
+            logger.info("[MASTER RPC] Calling rpc.init_rpc...")
             rpc.init_rpc("master", rank=rank, world_size=world_size, 
                         rpc_backend_options=rpc_backend_options)
             rpc_initialized = True
-            logger.info("Master RPC initialized successfully")
+            logger.info("[MASTER RPC] RPC initialization successful")
             
             # Define workers
             workers = [f"worker{i}" for i in range(1, world_size)]
+            logger.info(f"[MASTER] Defined workers: {workers}")
             
             # Create enhanced distributed model
+            logger.info("[MASTER] Creating EnhancedDistributedModel...")
+            model_creation_start = time.time()
+            
             model = EnhancedDistributedModel(
                 model_type=model_type,
                 num_splits=num_splits,
@@ -786,21 +888,26 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 shards_dir=shards_dir
             )
             
-            logger.info("Enhanced distributed model created successfully")
+            model_creation_time = time.time() - model_creation_start
+            logger.info(f"[MASTER] Enhanced distributed model created successfully in {model_creation_time:.2f}s")
             
             # Load dataset
+            logger.info(f"[MASTER] Loading dataset {dataset}...")
+            dataset_start = time.time()
             model_loader = ModelLoader(models_dir)
             test_loader = model_loader.load_dataset(dataset, model_type, batch_size)
+            dataset_time = time.time() - dataset_start
             
             # Wrap with prefetching if enabled
             if enable_prefetch:
-                logger.info(f"Enabling prefetching with {prefetch_batches} batches")
+                logger.info(f"[MASTER] Enabling prefetching with {prefetch_batches} batches")
                 test_loader = PrefetchDataLoader(test_loader, prefetch_batches=prefetch_batches)
             
-            logger.info(f"Dataset successfully loaded: {dataset} (batch_size={batch_size})")
+            logger.info(f"[MASTER] Dataset loaded in {dataset_time:.2f}s: {dataset} (batch_size={batch_size})")
             
             # Run inference with enhanced metrics
-            logger.info("Starting inference with enhanced metrics collection...")
+            logger.info("[MASTER] ========== Starting Inference ==========")
+            logger.info(f"[MASTER] Starting inference with {num_test_samples} test samples")
             start_time = time.time()
             
             total_images = 0
@@ -809,7 +916,8 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             
             if use_pipelining and model.use_pipelining and model.pipeline_manager:
                 # Pipelined inference with multiple batches in flight
-                logger.info("Using PIPELINED inference for maximum throughput")
+                logger.info("[MASTER INFERENCE] Using PIPELINED inference mode for maximum throughput")
+                logger.info("[MASTER INFERENCE] Pipeline manager initialized and ready")
                 
                 # Configuration for pipelining
                 max_batches_in_flight = 3  # Limit memory usage
@@ -904,11 +1012,12 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 
             else:
                 # Original sequential inference
-                logger.info("Using sequential inference")
+                logger.info("[MASTER INFERENCE] Using SEQUENTIAL inference mode")
                 
                 with torch.no_grad():
                     for i, (images, labels) in enumerate(test_loader):
                         if total_images >= num_test_samples:
+                            logger.info(f"[MASTER INFERENCE] Reached target of {num_test_samples} samples, stopping")
                             break
                         
                         # Trim batch if necessary
@@ -916,6 +1025,7 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         if images.size(0) > remaining:
                             images = images[:remaining]
                             labels = labels[:remaining]
+                            logger.info(f"[MASTER INFERENCE] Trimmed batch to {len(images)} images")
                         
                         # Explicit device placement for consistency and predictability
                         images = images.to("cpu")
@@ -924,10 +1034,17 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         # Start batch tracking
                         batch_start_time = metrics_collector.start_batch(batch_count, len(images))
                         
-                        logger.info(f"Processing batch {batch_count + 1} with {len(images)} images")
+                        logger.info(f"[MASTER INFERENCE] ===== Processing batch {batch_count + 1}/{num_test_samples//batch_size + 1} =====")
+                        logger.info(f"[MASTER INFERENCE] Batch size: {len(images)}, Total processed: {total_images}")
                         
                         # Run inference
+                        logger.info(f"[MASTER INFERENCE] Calling model.forward() for batch {batch_count + 1}")
+                        inference_start = time.time()
+                        
                         output = model(images, batch_id=batch_count)
+                        
+                        inference_time = time.time() - inference_start
+                        logger.info(f"[MASTER INFERENCE] Model forward pass completed in {inference_time:.3f}s")
                         
                         # Calculate accuracy
                         _, predicted = torch.max(output.data, 1)
@@ -940,18 +1057,21 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         # End batch tracking
                         metrics_collector.end_batch(batch_count, accuracy=batch_accuracy)
                         
-                        logger.info(f"Batch {batch_count + 1} accuracy: {batch_accuracy:.2f}%")
+                        logger.info(f"[MASTER INFERENCE] Batch {batch_count + 1} completed: "
+                                   f"accuracy={batch_accuracy:.2f}%, "
+                                   f"time={inference_time:.3f}s, "
+                                   f"throughput={len(images)/inference_time:.2f} img/s")
                         batch_count += 1
             
             elapsed_time = time.time() - start_time
             final_accuracy = (num_correct / total_images) * 100.0 if total_images > 0 else 0.0
             overall_ips = total_images / elapsed_time if elapsed_time > 0 else 0.0
             
-            logger.info(f"=== Enhanced Inference Results ===")
-            logger.info(f"Total images processed: {total_images}")
-            logger.info(f"Total time: {elapsed_time:.2f}s")
-            logger.info(f"Final accuracy: {final_accuracy:.2f}%")
-            logger.info(f"Overall throughput: {overall_ips:.2f} images/sec")
+            logger.info("[MASTER] ========== Inference Complete ==========")
+            logger.info(f"[MASTER RESULTS] Total images processed: {total_images}")
+            logger.info(f"[MASTER RESULTS] Total time: {elapsed_time:.2f}s")
+            logger.info(f"[MASTER RESULTS] Final accuracy: {final_accuracy:.2f}%")
+            logger.info(f"[MASTER RESULTS] Overall throughput: {overall_ips:.2f} images/sec")
             
             # Calculate actual per-image latency from end-to-end time
             actual_latency_ms = (elapsed_time * 1000.0) / total_images if total_images > 0 else 0.0
@@ -989,40 +1109,55 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 logger.info("Stopped prefetch loader")
     
     else:  # Worker nodes
-        logger.info(f"Initializing enhanced worker node with rank {rank}")
+        logger.info("[WORKER] ========================================")
+        logger.info(f"[WORKER] Initializing enhanced worker node with rank {rank}")
+        logger.info(f"[WORKER] Master address: {master_addr}:{master_port}")
+        logger.info(f"[WORKER] World size: {world_size}, Num threads: {num_threads}")
+        logger.info("[WORKER] ========================================")
+        
         retry_count = 0
         max_retries = 30
         connected = False
         
         while retry_count < max_retries and not connected:
             try:
+                logger.info(f"[WORKER RPC] Connection attempt {retry_count + 1}/{max_retries}")
+                logger.info(f"[WORKER RPC] Connecting to master at tcp://{master_addr}:{master_port}")
+                
                 rpc_backend_options = rpc.TensorPipeRpcBackendOptions(
                     num_worker_threads=num_threads,
                     rpc_timeout=3600,
                     init_method=f"tcp://{master_addr}:{master_port}"
                 )
                 
+                logger.info(f"[WORKER RPC] Calling rpc.init_rpc for worker{rank}...")
                 rpc.init_rpc(f"worker{rank}", rank=rank, world_size=world_size,
                            rpc_backend_options=rpc_backend_options)
                 connected = rpc_initialized = True
-                logger.info(f"Enhanced worker {rank} connected successfully")
+                logger.info(f"[WORKER RPC] Worker {rank} connected successfully!")
+                logger.info("[WORKER] Ready to receive shard deployments")
                 
             except Exception as e:
                 retry_count += 1
-                logger.warning(f"Connection attempt {retry_count} failed: {e}")
+                logger.warning(f"[WORKER RPC] Connection attempt {retry_count} failed: {e}")
                 if retry_count >= max_retries:
-                    logger.error(f"Worker {rank} failed to connect after {max_retries} attempts")
+                    logger.error(f"[WORKER RPC] Worker {rank} failed to connect after {max_retries} attempts")
                     sys.exit(1)
-                time.sleep(10 + (retry_count % 5))
+                wait_time = 10 + (retry_count % 5)
+                logger.info(f"[WORKER RPC] Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
     
     # Cleanup
     if rpc_initialized:
-        logger.info("Shutting down RPC")
+        logger.info("[CLEANUP] ========== Starting RPC Shutdown ==========")
+        logger.info(f"[CLEANUP] Rank {rank} initiating RPC shutdown")
         try:
+            shutdown_start = time.time()
             rpc.shutdown()
-            logger.info("RPC shutdown complete")
+            shutdown_time = time.time() - shutdown_start
+            logger.info(f"[CLEANUP] RPC shutdown completed successfully in {shutdown_time:.2f}s")
         except Exception as e:
-            logger.error(f"Error during RPC shutdown: {e}")
+            logger.error(f"[CLEANUP] Error during RPC shutdown: {e}", exc_info=True)
     
     # Finalize metrics
     final_results = metrics_collector.finalize(model_type)
