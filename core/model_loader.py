@@ -20,7 +20,7 @@ class ModelLoader:
     SUPPORTED_MODELS = {
         "mobilenetv2": {
             "model_class": torchvision_models.mobilenet_v2,
-            "weight_file": "mobilenetv2_cifar10.pth",
+            "weight_file": "mobilenetv2_100epochs_jul15.pth",
             "input_size": (224, 224),
             "last_channel_attr": "last_channel"
         },

@@ -11,8 +11,9 @@ import torch.nn as nn
 import torch.profiler
 import psutil
 import logging
-from typing import Dict, List, Tuple, Any, Callable
-from dataclasses import dataclass
+import os
+from typing import Dict, List, Tuple, Any, Callable, Optional
+from dataclasses import dataclass, field
 from collections import defaultdict
 import json
 
@@ -53,6 +54,7 @@ class ModelProfile:
     total_memory_mb: float
     total_flops: int
     total_parameters: int
+    block_profiles: Optional[Dict[int, Dict[str, Any]]] = field(default_factory=dict)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -61,7 +63,8 @@ class ModelProfile:
             'total_time_ms': self.total_time_ms,
             'total_memory_mb': self.total_memory_mb,
             'total_flops': self.total_flops,
-            'total_parameters': self.total_parameters
+            'total_parameters': self.total_parameters,
+            'block_profiles': self.block_profiles if self.block_profiles else {}
         }
     
     def save_to_file(self, filepath: str):
@@ -73,19 +76,26 @@ class ModelProfile:
 class LayerProfiler:
     """Enhanced profiler that captures both named modules and functional operations."""
     
-    def __init__(self, device: str = "cpu", warmup_iterations: int = 3, profile_iterations: int = 10):
+    def __init__(self, device: str = "cpu", warmup_iterations: int = 10, profile_iterations: int = 25):
         """
         Initialize the enhanced profiler.
         
         Args:
             device: Device to run profiling on ("cpu" or "cuda")
-            warmup_iterations: Number of warmup iterations
-            profile_iterations: Number of profiling iterations for averaging
+            warmup_iterations: Number of warmup iterations (default: 10, matching GAPP)
+            profile_iterations: Number of profiling iterations for averaging (default: 25, matching GAPP)
         """
         self.device = device
         self.warmup_iterations = warmup_iterations
         self.profile_iterations = profile_iterations
         self.logger = logging.getLogger(__name__)
+        
+        # Check if CUDA is available and warn if using GPU
+        if self.device == "cuda" and torch.cuda.is_available():
+            self.logger.info(f"Using GPU for profiling: {torch.cuda.get_device_name(0)}")
+        elif self.device == "cuda" and not torch.cuda.is_available():
+            self.logger.warning("CUDA requested but not available. Falling back to CPU.")
+            self.device = "cpu"
         
         # Model-specific functional operation definitions
         self.model_functional_ops = {
@@ -179,6 +189,13 @@ class LayerProfiler:
         module = module.to(self.device)
         input_tensor = input_tensor.to(self.device)
         
+        # CPU-specific optimizations for Raspberry Pi
+        if self.device == "cpu":
+            # Set number of threads for better performance on Pi
+            torch.set_num_threads(4)  # Raspberry Pi 4 has 4 cores
+            # Disable gradient computation for better performance
+            torch.set_grad_enabled(False)
+        
         # Warmup
         with torch.no_grad():
             for _ in range(self.warmup_iterations):
@@ -199,16 +216,20 @@ class LayerProfiler:
             memory_before = psutil.virtual_memory().used / (1024 * 1024)
             cpu_before = psutil.cpu_percent()
             
-            # Time the execution
+            # Ensure GPU operations are complete before timing
             if self.device == "cuda":
                 torch.cuda.synchronize()
+            
+            # Time the execution using high-precision timer
             start_time = time.perf_counter()
             
             with torch.no_grad():
                 output = module(input_tensor)
             
+            # Ensure GPU operations are complete after execution
             if self.device == "cuda":
                 torch.cuda.synchronize()
+            
             end_time = time.perf_counter()
             
             # Measure memory after
@@ -256,22 +277,35 @@ class LayerProfiler:
         
         # Profile execution time
         execution_times = []
+        memory_usages = []
         
         for _ in range(self.profile_iterations):
+            # Measure memory before (for consistency with layer profiling)
+            memory_before = psutil.virtual_memory().used / (1024 * 1024)
+            
+            # Ensure GPU operations are complete before timing
             if self.device == "cuda":
                 torch.cuda.synchronize()
+            
             start_time = time.perf_counter()
             
             with torch.no_grad():
                 output = operation_func(input_tensor)
             
+            # Ensure GPU operations are complete after execution
             if self.device == "cuda":
                 torch.cuda.synchronize()
+            
             end_time = time.perf_counter()
             
+            # Measure memory after
+            memory_after = psutil.virtual_memory().used / (1024 * 1024)
+            
             execution_times.append((end_time - start_time) * 1000)  # Convert to ms
+            memory_usages.append(max(0, memory_after - memory_before))
         
         avg_execution_time = sum(execution_times) / len(execution_times)
+        avg_memory_usage = sum(memory_usages) / len(memory_usages) if memory_usages else 0.0
         
         # Calculate FLOPs
         if flops_calc:
@@ -283,7 +317,7 @@ class LayerProfiler:
             layer_name=layer_name,
             layer_type=operation_name,
             execution_time_ms=avg_execution_time,
-            memory_usage_mb=0.0,  # Functional operations don't have learnable parameters
+            memory_usage_mb=avg_memory_usage,  # Now tracking memory for functional ops too
             flops=flops,
             input_shape=tuple(input_tensor.shape),
             output_shape=tuple(output.shape),
@@ -316,6 +350,56 @@ class LayerProfiler:
         # Step 3: Add missing functional operations
         layer_profiles = self._add_functional_operations(model, layer_profiles, sample_input, model_name)
         
+        # Step 4: Aggregate block-level profiles
+        import re
+        block_profiles = {}
+        current_block_id = -1
+        current_block_time = 0.0
+        current_block_memory = 0.0
+        current_block_flops = 0
+        current_block_params = 0
+        
+        for lp in layer_profiles:
+            block_match = re.search(r'features\.(\d+)', lp.layer_name)
+            block_id = int(block_match.group(1)) if block_match else -1
+            
+            if block_id != current_block_id and current_block_id != -1:
+                # Save the previous block
+                block_profiles[current_block_id] = {
+                    'execution_time_ms': current_block_time,
+                    'memory_usage_mb': current_block_memory,
+                    'flops': current_block_flops,
+                    'parameters': current_block_params
+                }
+                # Reset for new block
+                current_block_time = 0.0
+                current_block_memory = 0.0
+                current_block_flops = 0
+                current_block_params = 0
+            
+            current_block_id = block_id
+            current_block_time += lp.execution_time_ms
+            current_block_memory += lp.memory_usage_mb
+            current_block_flops += lp.flops
+            current_block_params += lp.parameters
+        
+        # Don't forget the last block
+        if current_block_id != -1:
+            block_profiles[current_block_id] = {
+                'execution_time_ms': current_block_time,
+                'memory_usage_mb': current_block_memory,
+                'flops': current_block_flops,
+                'parameters': current_block_params
+            }
+        
+        # Log block-level summary
+        if block_profiles:
+            self.logger.info("\nBlock-level execution summary:")
+            for block_id in sorted(block_profiles.keys()):
+                bp = block_profiles[block_id]
+                self.logger.info(f"  Block {block_id}: {bp['execution_time_ms']:.2f}ms, "
+                               f"{bp['parameters']:,} params")
+        
         # Calculate totals
         total_time = sum(lp.execution_time_ms for lp in layer_profiles)
         total_memory = sum(lp.memory_usage_mb for lp in layer_profiles)
@@ -324,7 +408,8 @@ class LayerProfiler:
         
         self.logger.info(f"Completed enhanced profiling for {model_name}: {len(layer_profiles)} operations profiled")
         
-        return ModelProfile(
+        # Create enhanced ModelProfile with block data
+        profile = ModelProfile(
             model_name=model_name,
             layer_profiles=layer_profiles,
             total_time_ms=total_time,
@@ -332,6 +417,11 @@ class LayerProfiler:
             total_flops=total_flops,
             total_parameters=total_parameters
         )
+        
+        # Add block profiles as an attribute
+        profile.block_profiles = block_profiles
+        
+        return profile
     
     def _collect_intermediate_outputs(self, model: nn.Module, sample_input: torch.Tensor) -> Dict[str, Tuple[torch.Tensor, torch.Tensor]]:
         """Collect intermediate outputs from all named modules."""
@@ -358,6 +448,32 @@ class LayerProfiler:
             handle.remove()
         
         return intermediate_outputs
+    
+    def save_layer_timings_gapp_style(self, profile: ModelProfile, output_dir: str, device: str):
+        """Save individual layer timings in GAPP-style format."""
+        for layer_profile in profile.layer_profiles:
+            # Create GAPP-style identifier
+            shape_suffix = "x".join(map(str, layer_profile.input_shape[1:]))  # Skip batch dimension
+            block_identifier = f"{profile.model_name}_{layer_profile.layer_name.replace('.', '_')}_input{shape_suffix}"
+            
+            # Create timing data in GAPP format
+            timing_data = {
+                "block_identifier": block_identifier,
+                "target_execution_time_ms": layer_profile.execution_time_ms,
+                "target_device": device,
+                "example_input_shape": list(layer_profile.input_shape),
+                # Additional metrics beyond GAPP
+                "memory_usage_mb": layer_profile.memory_usage_mb,
+                "flops": layer_profile.flops,
+                "parameters": layer_profile.parameters
+            }
+            
+            # Save to file
+            filename = f"{block_identifier}_time.json"
+            filepath = os.path.join(output_dir, filename)
+            
+            with open(filepath, 'w') as f:
+                json.dump(timing_data, f, indent=2)
     
     def _add_functional_operations(self, model: nn.Module, layer_profiles: List[LayerProfile], 
                                  sample_input: torch.Tensor, model_name: str) -> List[LayerProfile]:
@@ -431,7 +547,7 @@ class LayerProfiler:
 
 
 def profile_model_enhanced(model: nn.Module, sample_input: torch.Tensor, model_name: str,
-                         device: str = "cpu", save_path: str = None) -> ModelProfile:
+                         device: str = "cpu", save_path: str = None, output_dir: str = None) -> ModelProfile:
     """
     Convenience function to profile a model with enhanced functional operation detection.
     
@@ -440,7 +556,8 @@ def profile_model_enhanced(model: nn.Module, sample_input: torch.Tensor, model_n
         sample_input: Sample input tensor
         model_name: Name of the model
         device: Device to run profiling on
-        save_path: Optional path to save the profile
+        save_path: Optional path to save the profile (overrides output_dir)
+        output_dir: Optional directory for GAPP-style output naming
     
     Returns:
         ModelProfile with complete profiling data
@@ -450,8 +567,53 @@ def profile_model_enhanced(model: nn.Module, sample_input: torch.Tensor, model_n
     
     if save_path:
         profile.save_to_file(save_path)
+    elif output_dir:
+        # Use GAPP-style naming convention
+        os.makedirs(output_dir, exist_ok=True)
+        # Save overall profile
+        profile_path = os.path.join(output_dir, f"{model_name}_profile_{device}.json")
+        profile.save_to_file(profile_path)
+        
+        # Save individual layer timings in GAPP format
+        profiler.save_layer_timings_gapp_style(profile, output_dir, device)
     
     return profile
+
+
+def profile_for_pi(model: nn.Module, sample_input: torch.Tensor, model_name: str,
+                   save_dir: str = "pi_profiles", batch_sizes: List[int] = [1, 4, 8]):
+    """
+    Profile a model specifically for Raspberry Pi deployment.
+    
+    Args:
+        model: PyTorch model to profile
+        sample_input: Sample input tensor (batch size will be adjusted)
+        model_name: Name of the model
+        save_dir: Directory to save Pi-specific profiles
+        batch_sizes: List of batch sizes to profile
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Force CPU for Pi profiling
+    profiler = LayerProfiler(device="cpu", warmup_iterations=5, profile_iterations=10)
+    
+    for batch_size in batch_sizes:
+        # Adjust input for batch size
+        input_shape = list(sample_input.shape)
+        input_shape[0] = batch_size
+        batch_input = torch.randn(input_shape)
+        
+        print(f"\nProfiling {model_name} with batch size {batch_size} for Raspberry Pi...")
+        profile = profiler.profile_model(model, batch_input, model_name)
+        
+        # Save with Pi-specific naming
+        filename = f"{model_name}_pi_profile_batch{batch_size}.json"
+        filepath = os.path.join(save_dir, filename)
+        profile.save_to_file(filepath)
+        
+        print(f"Saved Pi profile to: {filepath}")
+        print(f"Total execution time: {profile.total_time_ms:.2f}ms")
+        print(f"Throughput: {batch_size * 1000 / profile.total_time_ms:.2f} images/sec")
 
 
 if __name__ == "__main__":
@@ -464,5 +626,10 @@ if __name__ == "__main__":
     model = models.mobilenet_v2(weights=None)
     sample_input = torch.randn(1, 3, 224, 224)
     
-    profile = profile_model_enhanced(model, sample_input, "mobilenetv2", save_path="test_profile.json")
+    # Standard profiling
+    profile = profile_model_enhanced(model, sample_input, "mobilenetv2", 
+                                   output_dir="profiling_results")
     print(f"Enhanced profiling complete: {len(profile.layer_profiles)} operations profiled")
+    
+    # Pi-specific profiling
+    profile_for_pi(model, sample_input, "mobilenetv2")

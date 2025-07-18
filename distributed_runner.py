@@ -27,6 +27,10 @@ import socket
 import sys
 from typing import List, Dict, Any, Optional
 import json
+import hashlib
+from collections import OrderedDict
+import queue
+import threading
 
 # Import our enhanced modules
 from profiling import LayerProfiler, IntelligentSplitter, split_model_intelligently
@@ -54,7 +58,10 @@ class EnhancedShardWrapper(nn.Module):
         
         # Create metrics collector if none provided (for workers)
         if self.metrics_collector is None:
-            rank = rpc.get_worker_info().id if rpc.is_available() else 0
+            try:
+                rank = rpc.get_worker_info().id
+            except:
+                rank = 0
             self.metrics_collector = EnhancedMetricsCollector(rank)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -93,13 +100,237 @@ class EnhancedShardWrapper(nn.Module):
         return [RRef(p) for p in self.parameters()]
 
 
+class LocalLoadingShardWrapper(nn.Module):
+    """Shard wrapper that loads weights locally instead of receiving them."""
+    
+    def __init__(self, shard_config: Dict[str, Any], shard_id: int, 
+                 metrics_collector: Optional[EnhancedMetricsCollector] = None):
+        super().__init__()
+        self.shard_id = shard_id
+        self.metrics_collector = metrics_collector
+        
+        # Create metrics collector if none provided (for workers)
+        if self.metrics_collector is None:
+            try:
+                rank = rpc.get_worker_info().id
+            except:
+                rank = 0
+            self.metrics_collector = EnhancedMetricsCollector(rank)
+        
+        # Load the shard locally based on config
+        self.module = self._load_local_shard(shard_config)
+    
+    def _load_local_shard(self, config: Dict[str, Any]) -> nn.Module:
+        """Load only the required shard from local weights."""
+        # Load full model from local disk
+        model_loader = ModelLoader(config.get('models_dir', './models'))
+        full_model = model_loader.load_model(config['model_type'], config.get('num_classes', 10))
+        
+        # Extract specified layers
+        shard = nn.Sequential()
+        for i, layer_spec in enumerate(config['layers']):
+            if isinstance(layer_spec, nn.Module):
+                # Direct module (for compatibility)
+                shard.add_module(f"layer_{i}", layer_spec)
+            elif isinstance(layer_spec, dict):
+                # Layer specification
+                if 'module' in layer_spec:
+                    shard.add_module(layer_spec.get('name', f"layer_{i}"), layer_spec['module'])
+                elif 'path' in layer_spec:
+                    # Navigate to nested module
+                    module = full_model
+                    for attr in layer_spec['path'].split('.'):
+                        module = getattr(module, attr)
+                    shard.add_module(layer_spec.get('name', f"layer_{i}"), module)
+        
+        # Move to CPU (same as original)
+        return shard.to("cpu")
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass with enhanced metrics collection."""
+        if not isinstance(x, torch.Tensor):
+            raise TypeError(f"Expected torch.Tensor but got {type(x)}")
+        
+        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} processing tensor shape: {x.shape}")
+        
+        x = x.to("cpu")
+        start_time = time.time()
+        
+        # Forward pass
+        with torch.no_grad():
+            output = self.module(x).cpu()
+        
+        end_time = time.time()
+        
+        # Record stage metrics
+        if self.metrics_collector:
+            self.metrics_collector.record_pipeline_stage(
+                batch_id=0,
+                stage_id=self.shard_id,
+                stage_name=f"shard_{self.shard_id}",
+                start_time=start_time,
+                end_time=end_time,
+                input_size_bytes=x.numel() * x.element_size(),
+                output_size_bytes=output.numel() * output.element_size()
+            )
+        
+        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} completed: {output.shape}")
+        return output
+    
+    def parameter_rrefs(self):
+        """Get parameter RRefs for distributed training (if needed)."""
+        return [RRef(p) for p in self.parameters()]
+
+
+class CachedShardWrapper(LocalLoadingShardWrapper):
+    """Shard wrapper with intelligent caching for repeated inference patterns."""
+    
+    def __init__(self, shard_config: Dict[str, Any], shard_id: int,
+                 metrics_collector: Optional[EnhancedMetricsCollector] = None,
+                 cache_size: int = 100):
+        super().__init__(shard_config, shard_id, metrics_collector)
+        self.cache_size = cache_size
+        self.cache = OrderedDict()  # LRU cache
+        self.cache_hits = 0
+        self.cache_misses = 0
+        
+    def _tensor_hash(self, tensor: torch.Tensor) -> str:
+        """Create a hash for tensor caching."""
+        # For small tensors, hash the entire content
+        if tensor.numel() < 1000:
+            return hashlib.md5(tensor.cpu().numpy().tobytes()).hexdigest()
+        
+        # For large tensors, hash shape + sample of values
+        shape_str = str(tensor.shape)
+        # Sample corners and center
+        flat = tensor.flatten()
+        samples = [
+            flat[0].item(),
+            flat[-1].item(),
+            flat[tensor.numel()//2].item(),
+            tensor.mean().item(),
+            tensor.std().item()
+        ]
+        sample_str = str(samples)
+        
+        return hashlib.md5(f"{shape_str}_{sample_str}".encode()).hexdigest()
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass with caching."""
+        if not isinstance(x, torch.Tensor):
+            raise TypeError(f"Expected torch.Tensor but got {type(x)}")
+            
+        # Generate cache key
+        cache_key = self._tensor_hash(x)
+        
+        # Check cache
+        if cache_key in self.cache:
+            self.cache_hits += 1
+            # Move to end (LRU)
+            self.cache.move_to_end(cache_key)
+            cached_output = self.cache[cache_key]
+            
+            # Log cache performance periodically
+            if (self.cache_hits + self.cache_misses) % 100 == 0:
+                hit_rate = self.cache_hits / (self.cache_hits + self.cache_misses) * 100
+                logging.info(f"[Shard {self.shard_id}] Cache hit rate: {hit_rate:.1f}%")
+            
+            # Return copy to prevent cache corruption
+            return cached_output.clone()
+        
+        # Cache miss - compute normally
+        self.cache_misses += 1
+        
+        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} processing tensor shape: {x.shape}")
+        
+        x = x.to("cpu")
+        start_time = time.time()
+        
+        # Forward pass
+        with torch.no_grad():
+            output = self.module(x).cpu()
+        
+        end_time = time.time()
+        
+        # Store in cache
+        if len(self.cache) >= self.cache_size:
+            # Remove oldest (first) item
+            self.cache.popitem(last=False)
+        
+        # Store output
+        self.cache[cache_key] = output.clone()
+        
+        # Record stage metrics
+        if self.metrics_collector:
+            self.metrics_collector.record_pipeline_stage(
+                batch_id=0,
+                stage_id=self.shard_id,
+                stage_name=f"shard_{self.shard_id}",
+                start_time=start_time,
+                end_time=end_time,
+                input_size_bytes=x.numel() * x.element_size(),
+                output_size_bytes=output.numel() * output.element_size()
+            )
+        
+        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} completed: {output.shape}")
+        return output
+
+
+class PrefetchDataLoader:
+    """Prefetching wrapper for PyTorch DataLoader."""
+    
+    def __init__(self, dataloader: torch.utils.data.DataLoader, 
+                 prefetch_batches: int = 2):
+        self.dataloader = dataloader
+        self.prefetch_batches = prefetch_batches
+        self.prefetch_queue = queue.Queue(maxsize=prefetch_batches)
+        self.stop_event = threading.Event()
+        self.prefetch_thread = None
+        
+    def _prefetch_worker(self):
+        """Worker thread that prefetches batches."""
+        try:
+            for batch_data in self.dataloader:
+                if self.stop_event.is_set():
+                    break
+                self.prefetch_queue.put(batch_data)
+        except Exception as e:
+            logging.error(f"Prefetch worker error: {e}")
+            self.prefetch_queue.put(None)  # Signal error
+    
+    def __iter__(self):
+        """Start prefetching and return iterator."""
+        self.stop_event.clear()
+        self.prefetch_thread = threading.Thread(target=self._prefetch_worker)
+        self.prefetch_thread.start()
+        return self
+    
+    def __next__(self):
+        """Get next prefetched batch."""
+        item = self.prefetch_queue.get()
+        if item is None:
+            raise StopIteration
+        return item
+    
+    def __len__(self):
+        return len(self.dataloader)
+    
+    def stop(self):
+        """Stop prefetching."""
+        self.stop_event.set()
+        if self.prefetch_thread:
+            self.prefetch_thread.join()
+
+
 class EnhancedDistributedModel(nn.Module):
     """Enhanced distributed model with intelligent splitting and pipelining."""
     
     def __init__(self, model_type: str, num_splits: int, workers: List[str],
                  num_classes: int = 10, metrics_collector: Optional[EnhancedMetricsCollector] = None,
                  use_intelligent_splitting: bool = True, use_pipelining: bool = False,
-                 models_dir: str = ".", split_block: Optional[int] = None):
+                 models_dir: str = ".", split_block: Optional[int] = None,
+                 use_local_loading: bool = False, enable_cache: bool = False,
+                 cache_size: int = 100):
         super().__init__()
         self.model_type = model_type
         self.num_splits = num_splits
@@ -110,6 +341,9 @@ class EnhancedDistributedModel(nn.Module):
         self.use_pipelining = use_pipelining
         self.models_dir = models_dir
         self.split_block = split_block
+        self.use_local_loading = use_local_loading
+        self.enable_cache = enable_cache
+        self.cache_size = cache_size
         
         self.logger = logging.getLogger(__name__)
         
@@ -126,7 +360,12 @@ class EnhancedDistributedModel(nn.Module):
         self.shards = self._split_model()
         
         # Deploy shards to workers
-        self.worker_rrefs = self._deploy_shards()
+        if len(self.workers) > 0:
+            self.worker_rrefs = self._deploy_shards()
+        else:
+            # No workers - run locally
+            self.worker_rrefs = []
+            self.logger.warning("No workers available - model will run locally without distribution")
         
         # Setup pipeline if enabled
         self.pipeline_manager = None
@@ -248,22 +487,116 @@ class EnhancedDistributedModel(nn.Module):
         
         return [shard1, shard2]
     
+    def _create_shard_configs(self) -> List[Dict[str, Any]]:
+        """Create configuration for each shard for local loading."""
+        shard_configs = []
+        
+        if len(self.shards) == 2 and self.model_type.lower() == 'mobilenetv2':
+            # For MobileNetV2 with 2 shards, we know the split
+            split_point = self.split_block if self.split_block is not None else 8
+            
+            # Shard 1: features[:split_point]
+            shard1_config = {
+                'model_type': self.model_type,
+                'models_dir': self.models_dir,
+                'num_classes': self.num_classes,
+                'layers': []
+            }
+            for i in range(split_point):
+                shard1_config['layers'].append({
+                    'name': f'features_{i}',
+                    'path': f'features.{i}'
+                })
+            shard_configs.append(shard1_config)
+            
+            # Shard 2: features[split_point:] + pooling + classifier
+            shard2_config = {
+                'model_type': self.model_type,
+                'models_dir': self.models_dir,
+                'num_classes': self.num_classes,
+                'layers': []
+            }
+            # Get total number of feature blocks
+            total_blocks = len(list(self.original_model.features.children()))
+            for i in range(split_point, total_blocks):
+                shard2_config['layers'].append({
+                    'name': f'features_{i}',
+                    'path': f'features.{i}'
+                })
+            # Add pooling and classifier layers as modules
+            shard2_config['layers'].extend([
+                {'name': 'pool', 'module': nn.AdaptiveAvgPool2d((1, 1))},
+                {'name': 'flatten', 'module': nn.Flatten()},
+                {'name': 'classifier', 'path': 'classifier'}
+            ])
+            shard_configs.append(shard2_config)
+            
+        else:
+            # For other cases, create generic configs based on existing shards
+            for i, shard in enumerate(self.shards):
+                config = {
+                    'model_type': self.model_type,
+                    'models_dir': self.models_dir,
+                    'num_classes': self.num_classes,
+                    'layers': []
+                }
+                # Add the shard modules directly (fallback approach)
+                for j, module in enumerate(shard.children()):
+                    config['layers'].append({
+                        'name': f'layer_{j}',
+                        'module': module
+                    })
+                shard_configs.append(config)
+        
+        return shard_configs
+    
     def _deploy_shards(self) -> List[RRef]:
         """Deploy shards to worker nodes."""
         worker_rrefs = []
         
-        for i, shard in enumerate(self.shards):
-            worker_name = self.workers[i % len(self.workers)]
+        if self.use_local_loading:
+            # Create shard configurations for local loading
+            shard_configs = self._create_shard_configs()
             
-            # Create remote shard wrapper
-            rref = rpc.remote(
-                worker_name,
-                EnhancedShardWrapper,
-                args=(shard, i, None)  # Workers create their own metrics collectors
-            )
-            worker_rrefs.append(rref)
+            # Choose wrapper class based on caching
+            if self.enable_cache:
+                wrapper_class = CachedShardWrapper
+            else:
+                wrapper_class = LocalLoadingShardWrapper
             
-            self.logger.info(f"Deployed shard {i} to worker {worker_name}")
+            for i, config in enumerate(shard_configs):
+                worker_name = self.workers[i % len(self.workers)]
+                
+                # Deploy with local loading
+                if self.enable_cache:
+                    rref = rpc.remote(
+                        worker_name,
+                        wrapper_class,
+                        args=(config, i, None, self.cache_size)
+                    )
+                else:
+                    rref = rpc.remote(
+                        worker_name,
+                        wrapper_class,
+                        args=(config, i, None)
+                    )
+                worker_rrefs.append(rref)
+                
+                self.logger.info(f"Deployed shard {i} config to worker {worker_name} (local loading)")
+        else:
+            # Original deployment method
+            for i, shard in enumerate(self.shards):
+                worker_name = self.workers[i % len(self.workers)]
+                
+                # Create remote shard wrapper
+                rref = rpc.remote(
+                    worker_name,
+                    EnhancedShardWrapper,
+                    args=(shard, i, None)  # Workers create their own metrics collectors
+                )
+                worker_rrefs.append(rref)
+                
+                self.logger.info(f"Deployed shard {i} to worker {worker_name}")
         
         return worker_rrefs
     
@@ -345,7 +678,10 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                           num_classes: int, dataset: str, num_test_samples: int,
                           num_splits: int, metrics_dir: str, use_intelligent_splitting: bool = True,
                           use_pipelining: bool = False, num_threads: int = 4,
-                          models_dir: str = ".", split_block: Optional[int] = None):
+                          models_dir: str = ".", split_block: Optional[int] = None,
+                          use_local_loading: bool = False, enable_cache: bool = False,
+                          cache_size: int = 100, enable_prefetch: bool = False,
+                          prefetch_batches: int = 2):
     """
     Run enhanced distributed inference with profiling and pipelining.
     """
@@ -421,7 +757,10 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 use_intelligent_splitting=use_intelligent_splitting,
                 use_pipelining=use_pipelining,
                 models_dir=models_dir,
-                split_block=split_block
+                split_block=split_block,
+                use_local_loading=use_local_loading,
+                enable_cache=enable_cache,
+                cache_size=cache_size
             )
             
             logger.info("Enhanced distributed model created successfully")
@@ -429,6 +768,11 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             # Load dataset
             model_loader = ModelLoader(models_dir)
             test_loader = model_loader.load_dataset(dataset, model_type, batch_size)
+            
+            # Wrap with prefetching if enabled
+            if enable_prefetch:
+                logger.info(f"Enabling prefetching with {prefetch_batches} batches")
+                test_loader = PrefetchDataLoader(test_loader, prefetch_batches=prefetch_batches)
             
             logger.info(f"Dataset successfully loaded: {dataset} (batch_size={batch_size})")
             
@@ -615,6 +959,11 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             
         except Exception as e:
             logger.error(f"Error in enhanced master node: {e}", exc_info=True)
+        finally:
+            # Cleanup prefetch loader if used
+            if enable_prefetch and 'test_loader' in locals() and hasattr(test_loader, 'stop'):
+                test_loader.stop()
+                logger.info("Stopped prefetch loader")
     
     else:  # Worker nodes
         logger.info(f"Initializing enhanced worker node with rank {rank}")
@@ -703,6 +1052,18 @@ def main():
     parser.add_argument("--split-block", type=int, default=None,
                        help="Specific block number to split at (for MobileNetV2)")
     
+    # New optimization features
+    parser.add_argument("--use-local-loading", action="store_true", default=False,
+                       help="Load model weights locally on workers instead of transferring")
+    parser.add_argument("--enable-cache", action="store_true", default=False,
+                       help="Enable tensor caching for repeated inputs")
+    parser.add_argument("--cache-size", type=int, default=100,
+                       help="Maximum number of cached tensors per worker")
+    parser.add_argument("--enable-prefetch", action="store_true", default=False,
+                       help="Enable data prefetching for improved throughput")
+    parser.add_argument("--prefetch-batches", type=int, default=2,
+                       help="Number of batches to prefetch")
+    
     args = parser.parse_args()
     
     # Handle intelligent splitting flag
@@ -728,7 +1089,12 @@ def main():
         use_pipelining=args.use_pipelining,
         num_threads=args.num_threads,
         models_dir=args.models_dir,
-        split_block=args.split_block
+        split_block=args.split_block,
+        use_local_loading=args.use_local_loading,
+        enable_cache=args.enable_cache,
+        cache_size=args.cache_size,
+        enable_prefetch=args.enable_prefetch,
+        prefetch_batches=args.prefetch_batches
     )
 
 

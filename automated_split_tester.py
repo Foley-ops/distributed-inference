@@ -125,13 +125,16 @@ class AutomatedSplitTester:
     def run_orchestrator(self, split_block: int, world_size: int = 3,
                         model: str = "mobilenetv2", batch_size: int = 8,
                         num_samples: int = 100, output_file: str = None,
-                        use_pipelining: bool = True) -> bool:
+                        use_pipelining: bool = True, metrics_dir: str = None,
+                        use_optimizations: bool = True) -> bool:
         """Run the orchestrator (rank 0) process."""
         
         if output_file is None:
             output_file = f"output_split{split_block}.txt"
         
-        metrics_dir = f"./metrics_split{split_block}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        # Use provided metrics_dir or create default
+        if metrics_dir is None:
+            metrics_dir = f"./metrics_split{split_block}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
         cmd = [
             "python3", "distributed_runner.py",
@@ -149,6 +152,16 @@ class AutomatedSplitTester:
         if use_pipelining:
             cmd.append("--use-pipelining")
         cmd.append("--use-intelligent-splitting")
+        
+        # Add optimization flags
+        if use_optimizations:
+            cmd.extend([
+                "--use-local-loading",
+                "--enable-cache",
+                "--cache-size", "100",
+                "--enable-prefetch",
+                "--prefetch-batches", "2"
+            ])
         
         logger.info(f"Starting orchestrator for split block {split_block}...")
         
@@ -176,13 +189,25 @@ class AutomatedSplitTester:
             return False
     
     def test_single_split(self, split_block: int, run_number: int,
-                         wait_time: int = 60, use_pipelining: bool = True) -> Dict[str, str]:
+                         wait_time: int = 60, use_pipelining: bool = True,
+                         session_dir: str = None, use_optimizations: bool = True) -> Dict[str, str]:
         """Test a single split configuration."""
         logger.info(f"\n{'='*60}")
         logger.info(f"Testing split block {split_block}, run {run_number} {'(PIPELINED)' if use_pipelining else '(sequential)'}")
         logger.info(f"{'='*60}")
         
-        output_file = f"output_split{split_block}_run{run_number}.txt"
+        # Use session_dir if provided, otherwise check instance variable
+        if session_dir is None and hasattr(self, 'session_dir'):
+            session_dir = self.session_dir
+        
+        # Create run directory structure
+        if session_dir:
+            run_dir = f"{session_dir}/split_{split_block}/run_{run_number}"
+            os.makedirs(run_dir, exist_ok=True)
+            output_file = f"{run_dir}/output.txt"
+        else:
+            # Fallback to old behavior if no session_dir
+            output_file = f"output_split{split_block}_run{run_number}.txt"
         start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # Kill existing processes
@@ -217,9 +242,17 @@ class AutomatedSplitTester:
         
         logger.info("Workers should be ready, starting orchestrator...")
         
+        # Determine metrics directory for this run
+        if session_dir:
+            metrics_dir = f"{run_dir}/metrics"
+        else:
+            metrics_dir = None
+        
         # Run orchestrator
         success = self.run_orchestrator(split_block, output_file=output_file, 
-                                       use_pipelining=use_pipelining)
+                                       use_pipelining=use_pipelining,
+                                       metrics_dir=metrics_dir,
+                                       use_optimizations=True)
         
         end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
@@ -235,16 +268,25 @@ class AutomatedSplitTester:
     def test_all_splits(self, split_blocks: List[int] = None, 
                        runs_per_split: int = 3,
                        worker_wait_time: int = 60,
-                       use_pipelining: bool = True):
+                       use_pipelining: bool = True,
+                       use_optimizations: bool = True):
         """Test all split blocks with multiple runs each."""
         
         if split_blocks is None:
             # Test all 19 possible splits (0-18)
             split_blocks = list(range(19))
         
-        # Create results file
+        # Create session directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        results_file = f"split_test_results_{timestamp}.csv"
+        session_dir = f"./metrics/session_{timestamp}"
+        os.makedirs(session_dir, exist_ok=True)
+        logger.info(f"Created session directory: {session_dir}")
+        
+        # Store session_dir as instance variable for use in other methods
+        self.session_dir = session_dir
+        
+        # Create results file in session directory
+        results_file = f"{session_dir}/split_test_results.csv"
         
         # Write CSV header
         with open(results_file, 'w', newline='') as f:
@@ -263,7 +305,9 @@ class AutomatedSplitTester:
                     
                     result = self.test_single_split(
                         split_block, run, wait_time=worker_wait_time,
-                        use_pipelining=use_pipelining
+                        use_pipelining=use_pipelining,
+                        session_dir=session_dir,
+                        use_optimizations=use_optimizations
                     )
                     
                     # Save result to CSV
@@ -294,14 +338,13 @@ class AutomatedSplitTester:
         self.display_summary(results_file)
         
         # Consolidate metrics into single JSON
-        metrics_file = self.consolidate_metrics(timestamp)
+        metrics_file = self.consolidate_metrics(timestamp, session_dir)
         
-        # Optionally clean up individual output files
+        # Note: With new directory structure, individual files are already organized
+        # No cleanup needed as files are in session directory
         if hasattr(self, 'cleanup_files') and self.cleanup_files:
-            logger.info("Cleaning up individual output files...")
-            for f in glob_module.glob('output_split*.txt'):
-                os.remove(f)
-            logger.info("Cleanup complete - metrics preserved in consolidated JSON")
+            logger.info("Note: Individual output files are now organized in session directory")
+            logger.info(f"All files preserved in: {session_dir}")
     
     def parse_output_file(self, output_file: str) -> Optional[Dict]:
         """Parse an output file to extract key metrics."""
@@ -347,6 +390,11 @@ class AutomatedSplitTester:
             if avg_time_match:
                 metrics['avg_processing_time'] = float(avg_time_match.group(1))
                 
+            # Extract actual per-image latency (more accurate for pipelined execution)
+            latency_match = re.search(r'Actual per-image latency: ([\d.]+)ms', content)
+            if latency_match:
+                metrics['actual_latency_ms'] = float(latency_match.group(1))
+                
             # Extract pipeline utilization
             pipeline_match = re.search(r'Pipeline utilization: ([\d.]+)', content)
             if pipeline_match:
@@ -365,7 +413,7 @@ class AutomatedSplitTester:
             logger.error(f"Error parsing {output_file}: {e}")
             return None
     
-    def consolidate_metrics(self, test_session_id: str):
+    def consolidate_metrics(self, test_session_id: str, session_dir: str = None):
         """Consolidate all metrics from output files into a single JSON."""
         consolidated = {
             'session_id': test_session_id,
@@ -387,24 +435,49 @@ class AutomatedSplitTester:
         }
         
         # Find all output files
-        output_files = glob_module.glob('output_split*.txt')
+        if session_dir:
+            # Look for output files in the session directory structure
+            for split_dir in glob_module.glob(f"{session_dir}/split_*"):
+                split_match = re.match(r'.*/split_(\d+)$', split_dir)
+                if split_match:
+                    split = int(split_match.group(1))
+                    
+                    for run_dir in glob_module.glob(f"{split_dir}/run_*"):
+                        run_match = re.match(r'.*/run_(\d+)$', run_dir)
+                        if run_match:
+                            run = int(run_match.group(1))
+                            output_file = f"{run_dir}/output.txt"
+                            
+                            if os.path.exists(output_file):
+                                # Parse metrics from file
+                                metrics = self.parse_output_file(output_file)
+                                if metrics:
+                                    if split not in consolidated['results']:
+                                        consolidated['results'][split] = {}
+                                    consolidated['results'][split][f'run{run}'] = metrics
+        else:
+            # Fallback to old behavior
+            output_files = glob_module.glob('output_split*.txt')
+            for output_file in output_files:
+                # Extract split and run from filename
+                match = re.match(r'output_split(\d+)_run(\d+)\.txt', output_file)
+                if match:
+                    split = int(match.group(1))
+                    run = int(match.group(2))
+                    
+                    # Parse metrics from file
+                    metrics = self.parse_output_file(output_file)
+                    if metrics:
+                        if split not in consolidated['results']:
+                            consolidated['results'][split] = {}
+                        consolidated['results'][split][f'run{run}'] = metrics
         
-        for output_file in output_files:
-            # Extract split and run from filename
-            match = re.match(r'output_split(\d+)_run(\d+)\.txt', output_file)
-            if match:
-                split = int(match.group(1))
-                run = int(match.group(2))
-                
-                # Parse metrics from file
-                metrics = self.parse_output_file(output_file)
-                if metrics:
-                    if split not in consolidated['results']:
-                        consolidated['results'][split] = {}
-                    consolidated['results'][split][f'run{run}'] = metrics
-        
-        # Save consolidated metrics
-        metrics_filename = f'consolidated_metrics_{test_session_id}.json'
+        # Save consolidated metrics in session directory
+        if session_dir:
+            metrics_filename = f'{session_dir}/consolidated_metrics.json'
+        else:
+            metrics_filename = f'consolidated_metrics_{test_session_id}.json'
+            
         with open(metrics_filename, 'w') as f:
             json.dump(consolidated, f, indent=2)
             
@@ -472,6 +545,8 @@ def main():
                        help="Seconds to wait for workers to be ready (default: 60)")
     parser.add_argument("--cleanup", action="store_true",
                        help="Clean up individual output files after consolidation")
+    parser.add_argument("--no-optimizations", action="store_true",
+                       help="Disable optimization features (local loading, caching, prefetching)")
     
     args = parser.parse_args()
     
@@ -497,7 +572,8 @@ def main():
         split_blocks=split_blocks,
         runs_per_split=args.runs,
         worker_wait_time=args.wait_time,
-        use_pipelining=True  # Always use pipelining by default, but can be changed
+        use_pipelining=True,  # Always use pipelining by default, but can be changed
+        use_optimizations=not args.no_optimizations
     )
 
 if __name__ == "__main__":
