@@ -78,8 +78,9 @@ class ModelSplitter:
             shard_filename = f"{model_type}_shard_{i}_of_{len(shards)}.pth"
             shard_path = os.path.join(self.shards_dir, shard_filename)
             
-            # Save only the state dict of the shard
+            # Save both the model and state dict
             torch.save({
+                'model': shard,  # Save the complete model structure
                 'state_dict': shard.state_dict(),
                 'shard_id': i,
                 'total_shards': len(shards),

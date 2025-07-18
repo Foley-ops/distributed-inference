@@ -142,18 +142,21 @@ class LocalLoadingShardWrapper(nn.Module):
             # Load the shard checkpoint
             checkpoint = torch.load(shard_path, map_location='cpu')
             
-            # Recreate the shard structure based on metadata
-            if 'shard_structure' in config:
-                # Use provided structure
-                shard = self._create_shard_from_structure(config['shard_structure'])
-            else:
-                # Fall back to loading from full model (for backward compatibility)
-                logging.warning(f"No shard structure provided, falling back to full model loading")
+            # The checkpoint should contain the model directly
+            if 'model' in checkpoint:
+                # Load the pre-built shard model
+                shard = checkpoint['model']
+                logging.info(f"Successfully loaded shard {shard_id} module")
+            elif 'state_dict' in checkpoint:
+                # If we have state_dict but no structure, try to infer from the checkpoint
+                logging.info(f"Checkpoint contains state_dict, attempting to load directly")
+                # For now, we'll need to fall back to the full model approach
+                # In the future, we should save the model structure with the checkpoint
+                logging.warning(f"No model structure in checkpoint, falling back to full model loading")
                 return self._load_from_full_model(config)
-            
-            # Load the state dict
-            shard.load_state_dict(checkpoint['state_dict'])
-            logging.info(f"Successfully loaded shard {shard_id} weights")
+            else:
+                logging.error(f"Invalid checkpoint format: {checkpoint.keys()}")
+                return self._load_from_full_model(config)
             
             return shard.to("cpu")
         else:
