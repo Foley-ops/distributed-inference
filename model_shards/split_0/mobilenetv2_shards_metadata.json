@@ -1,0 +1,37 @@
+{
+  "model_type": "mobilenetv2",
+  "num_splits": 1,
+  "num_shards": 2,
+  "num_classes": 10,
+  "shards": [
+    {
+      "shard_id": 0,
+      "filename": "mobilenetv2_shard_0_of_2.pth",
+      "path": "./model_shards/split_0/mobilenetv2_shard_0_of_2.pth",
+      "num_parameters": 0,
+      "layers": [
+        ": Sequential"
+      ]
+    },
+    {
+      "shard_id": 1,
+      "filename": "mobilenetv2_shard_1_of_2.pth",
+      "path": "./model_shards/split_0/mobilenetv2_shard_1_of_2.pth",
+      "num_parameters": 2236682,
+      "layers": [
+        "0.0: Conv2d",
+        "0.1: BatchNorm2d",
+        "0.2: ReLU6",
+        "1.conv.0.0: Conv2d",
+        "1.conv.0.1: BatchNorm2d",
+        "1.conv.0.2: ReLU6",
+        "1.conv.1: Conv2d",
+        "1.conv.2: BatchNorm2d",
+        "2.conv.0.0: Conv2d",
+        "2.conv.0.1: BatchNorm2d"
+      ]
+    }
+  ],
+  "split_type": "block_level",
+  "split_block": 0
+}

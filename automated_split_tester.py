@@ -570,7 +570,7 @@ def main():
         split_blocks=split_blocks,
         runs_per_split=args.runs,
         worker_wait_time=args.wait_time,
-        use_pipelining=True,  # Always use pipelining by default, but can be changed
+        use_pipelining=False,  # Always use pipelining by default, but can be changed
         use_optimizations=not args.no_optimizations
     )
 
