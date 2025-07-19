@@ -71,6 +71,29 @@ class ModelProfile:
         """Save profile to JSON file."""
         with open(filepath, 'w') as f:
             json.dump(self.to_dict(), f, indent=2)
+    
+    def save_block_times_to_csv(self, filepath: str):
+        """Save block-level execution times to CSV file."""
+        import csv
+        
+        if not self.block_profiles:
+            return
+        
+        with open(filepath, 'w', newline='') as f:
+            writer = csv.writer(f)
+            # Write header
+            writer.writerow(['block_id', 'execution_time_ms', 'memory_usage_mb', 'flops', 'parameters'])
+            
+            # Write data for each block
+            for block_id in sorted(self.block_profiles.keys()):
+                bp = self.block_profiles[block_id]
+                writer.writerow([
+                    block_id,
+                    f"{bp['execution_time_ms']:.4f}",
+                    f"{bp['memory_usage_mb']:.4f}",
+                    bp['flops'],
+                    bp['parameters']
+                ])
 
 
 class LayerProfiler:
@@ -547,7 +570,8 @@ class LayerProfiler:
 
 
 def profile_model_enhanced(model: nn.Module, sample_input: torch.Tensor, model_name: str,
-                         device: str = "cpu", save_path: str = None, output_dir: str = None) -> ModelProfile:
+                         device: str = "cpu", save_path: str = None, output_dir: str = None,
+                         save_block_csv: bool = True) -> ModelProfile:
     """
     Convenience function to profile a model with enhanced functional operation detection.
     
@@ -558,6 +582,7 @@ def profile_model_enhanced(model: nn.Module, sample_input: torch.Tensor, model_n
         device: Device to run profiling on
         save_path: Optional path to save the profile (overrides output_dir)
         output_dir: Optional directory for GAPP-style output naming
+        save_block_csv: Whether to save block execution times to CSV (default: True)
     
     Returns:
         ModelProfile with complete profiling data
@@ -567,12 +592,23 @@ def profile_model_enhanced(model: nn.Module, sample_input: torch.Tensor, model_n
     
     if save_path:
         profile.save_to_file(save_path)
+        # Also save block times CSV in the same directory
+        if save_block_csv and profile.block_profiles:
+            csv_path = save_path.replace('.json', '_block_times.csv')
+            profile.save_block_times_to_csv(csv_path)
+            print(f"Block execution times saved to: {csv_path}")
     elif output_dir:
         # Use GAPP-style naming convention
         os.makedirs(output_dir, exist_ok=True)
         # Save overall profile
         profile_path = os.path.join(output_dir, f"{model_name}_profile_{device}.json")
         profile.save_to_file(profile_path)
+        
+        # Save block times CSV
+        if save_block_csv and profile.block_profiles:
+            csv_path = os.path.join(output_dir, f"{model_name}_block_times_{device}.csv")
+            profile.save_block_times_to_csv(csv_path)
+            print(f"Block execution times saved to: {csv_path}")
         
         # Save individual layer timings in GAPP format
         profiler.save_layer_timings_gapp_style(profile, output_dir, device)
@@ -611,6 +647,13 @@ def profile_for_pi(model: nn.Module, sample_input: torch.Tensor, model_name: str
         filepath = os.path.join(save_dir, filename)
         profile.save_to_file(filepath)
         
+        # Save block times CSV
+        if profile.block_profiles:
+            csv_filename = f"{model_name}_pi_block_times_batch{batch_size}.csv"
+            csv_filepath = os.path.join(save_dir, csv_filename)
+            profile.save_block_times_to_csv(csv_filepath)
+            print(f"Saved block times to: {csv_filepath}")
+        
         print(f"Saved Pi profile to: {filepath}")
         print(f"Total execution time: {profile.total_time_ms:.2f}ms")
         print(f"Throughput: {batch_size * 1000 / profile.total_time_ms:.2f} images/sec")
@@ -628,8 +671,17 @@ if __name__ == "__main__":
     
     # Standard profiling
     profile = profile_model_enhanced(model, sample_input, "mobilenetv2", 
-                                   output_dir="profiling_results")
+                                   output_dir="profiling_results", save_block_csv=True)
     print(f"Enhanced profiling complete: {len(profile.layer_profiles)} operations profiled")
+    
+    # Display block execution times
+    if profile.block_profiles:
+        print("\nBlock execution times:")
+        print(f"{'Block':>6} | {'Time (ms)':>12} | {'Memory (MB)':>12} | {'Parameters':>12}")
+        print("-" * 50)
+        for block_id in sorted(profile.block_profiles.keys()):
+            bp = profile.block_profiles[block_id]
+            print(f"{block_id:>6} | {bp['execution_time_ms']:>12.4f} | {bp['memory_usage_mb']:>12.4f} | {bp['parameters']:>12,}")
     
     # Pi-specific profiling
     profile_for_pi(model, sample_input, "mobilenetv2")

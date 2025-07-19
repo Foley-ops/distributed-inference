@@ -252,6 +252,10 @@ class LocalLoadingShardWrapper(nn.Module):
         # Move to CPU (same as original)
         return shard.to("cpu")
     
+    def is_shard_loaded(self) -> bool:
+        """Check if shard is loaded and ready."""
+        return self.module is not None
+    
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass with enhanced metrics collection."""
         logger = logging.getLogger(__name__)
@@ -697,10 +701,14 @@ class EnhancedDistributedModel(nn.Module):
         for i, rref in enumerate(worker_rrefs):
             worker_name = self.workers[i % len(self.workers)]
             try:
-                # Use to_here() to ensure the remote object is fully initialized
-                # This blocks until the worker has finished __init__ (including shard loading)
-                _ = rref.to_here()
-                self.logger.info(f"[DEPLOY SHARDS] Worker {worker_name} confirmed shard {i} is loaded")
+                # Call a remote method to check if shard is loaded
+                # This avoids trying to serialize the entire Worker object
+                is_ready = rref.rpc_sync().is_shard_loaded()
+                if is_ready:
+                    self.logger.info(f"[DEPLOY SHARDS] Worker {worker_name} confirmed shard {i} is loaded")
+                else:
+                    self.logger.error(f"[DEPLOY SHARDS] Worker {worker_name} shard {i} not loaded!")
+                    raise RuntimeError(f"Worker {worker_name} failed to load shard {i}")
             except Exception as e:
                 self.logger.error(f"[DEPLOY SHARDS] Failed to verify shard {i} on {worker_name}: {e}")
                 raise
