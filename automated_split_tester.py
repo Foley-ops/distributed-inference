@@ -62,7 +62,7 @@ class AutomatedSplitTester:
         worker_cmd = (
             f"cd {self.project_path} && "
             f"{self.venv_activate} && "
-            f"python3 distributed_runner.py "
+            f"python3 -u distributed_runner.py "
             f"--rank {rank} --world-size {world_size} "
             f"--model {model} --batch-size {batch_size} "
             f"--num-test-samples {num_samples} --dataset cifar10 "
@@ -137,7 +137,7 @@ class AutomatedSplitTester:
             metrics_dir = f"./metrics_split{split_block}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
         cmd = [
-            "python3", "distributed_runner.py",
+            "python3", "-u", "distributed_runner.py",
             "--rank", "0",
             "--world-size", str(world_size),
             "--model", model,
@@ -360,6 +360,7 @@ class AutomatedSplitTester:
         }
         
         try:
+            # First try to parse from output.txt (in case it has the data)
             with open(output_file, 'r') as f:
                 content = f.read()
                 
@@ -383,23 +384,54 @@ class AutomatedSplitTester:
             if images_match:
                 metrics['images_processed'] = int(images_match.group(1))
                 
-            # Extract average processing time
-            avg_time_match = re.search(r'Average processing time: ([\d.]+)ms', content)
-            if avg_time_match:
-                metrics['avg_processing_time'] = float(avg_time_match.group(1))
+            # If we didn't find metrics in output.txt, look for CSV files
+            if metrics['throughput'] is None:
+                # Get the directory of the output file
+                output_dir = os.path.dirname(output_file)
+                metrics_dir = os.path.join(output_dir, 'metrics')
                 
-            # Extract actual per-image latency (more accurate for pipelined execution)
-            latency_match = re.search(r'Actual per-image latency: ([\d.]+)ms', content)
-            if latency_match:
-                metrics['actual_latency_ms'] = float(latency_match.group(1))
+                # Look for device metrics CSV files
+                if os.path.exists(metrics_dir):
+                    device_csv_files = glob_module.glob(os.path.join(metrics_dir, 'device_metrics_*_rank_0_*.csv'))
+                    if device_csv_files:
+                        # Use the most recent file
+                        latest_device_csv = max(device_csv_files, key=os.path.getmtime)
+                        
+                        # Read the CSV file
+                        with open(latest_device_csv, 'r') as f:
+                            reader = csv.DictReader(f)
+                            rows = list(reader)
+                            if rows:
+                                # Get the last row (final summary)
+                                last_row = rows[-1]
+                                if 'images_per_second' in last_row:
+                                    metrics['throughput'] = float(last_row['images_per_second'])
+                                if 'total_images_processed' in last_row:
+                                    metrics['images_processed'] = int(last_row['total_images_processed'])
+                                if 'average_processing_time_ms' in last_row:
+                                    metrics['avg_processing_time'] = float(last_row['average_processing_time_ms'])
                 
-            # Extract pipeline utilization
-            pipeline_match = re.search(r'Pipeline utilization: ([\d.]+)', content)
-            if pipeline_match:
-                metrics['pipeline_utilization'] = float(pipeline_match.group(1))
-                
-            # Extract device info (hostname for each rank)
-            # Looking for patterns like "[PlamaLV:rank0]" or similar
+                    # Look for batch metrics CSV files for accuracy
+                    batch_csv_files = glob_module.glob(os.path.join(metrics_dir, 'batch_metrics_*_rank_0_*.csv'))
+                    if batch_csv_files:
+                        latest_batch_csv = max(batch_csv_files, key=os.path.getmtime)
+                        
+                        with open(latest_batch_csv, 'r') as f:
+                            reader = csv.DictReader(f)
+                            accuracies = []
+                            total_time = 0
+                            for row in reader:
+                                if 'accuracy' in row and row['accuracy']:
+                                    accuracies.append(float(row['accuracy']))
+                                if 'total_time_ms' in row and row['total_time_ms']:
+                                    total_time = max(total_time, float(row['total_time_ms']))
+                            
+                            if accuracies:
+                                metrics['accuracy'] = sum(accuracies) / len(accuracies)
+                            if total_time > 0:
+                                metrics['total_time'] = total_time / 1000.0  # Convert ms to seconds
+            
+            # Extract device info from content
             device_matches = re.findall(r'\[([\w-]+):rank(\d+)\]', content)
             if device_matches:
                 for hostname, rank in device_matches:

@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
+model_shards/*
 # Distribution / packaging
 .Python
 build/
@@ -278,3 +279,8 @@ single_test_metrics
 # Project-specific documentation to ignore
 PIPELINING_EXPLANATION.md
 RPC_DOC.md
+
+metrics/*
+enhanced_metrics/*
+
+delete/*
