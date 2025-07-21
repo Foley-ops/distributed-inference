@@ -1166,6 +1166,11 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
         except Exception as e:
             logger.error(f"Error in enhanced master node: {e}", exc_info=True)
         finally:
+            # Signal workers to shutdown
+            logger.info("[MASTER] Signaling workers to shutdown...")
+            rpc.barrier()
+            logger.info("[MASTER] Workers acknowledged shutdown")
+            
             # Cleanup prefetch loader if used
             if enable_prefetch and 'test_loader' in locals() and hasattr(test_loader, 'stop'):
                 test_loader.stop()
@@ -1199,6 +1204,11 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 connected = rpc_initialized = True
                 logger.info(f"[WORKER RPC] Worker {rank} connected successfully!")
                 logger.info("[WORKER] Ready to receive shard deployments")
+                
+                # Wait for master to signal completion
+                logger.info("[WORKER] Waiting for master to complete inference...")
+                rpc.barrier()
+                logger.info("[WORKER] Received shutdown signal from master")
                 
             except Exception as e:
                 retry_count += 1
