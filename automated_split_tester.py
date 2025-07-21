@@ -52,7 +52,7 @@ class AutomatedSplitTester:
         time.sleep(5)  # Wait for processes to die
     
     def start_worker(self, rank: int, world_size: int = 3, model: str = "mobilenetv2",
-                    batch_size: int = 8, num_samples: int = 100) -> bool:
+                    batch_size: int = 8, num_samples: int = 100, split_block: int = 0) -> bool:
         """Start a worker on a Pi node."""
         host = self.pi_hosts[rank]
         full_host = f"{self.pi_user}@{host}"
@@ -66,6 +66,7 @@ class AutomatedSplitTester:
             f"--rank {rank} --world-size {world_size} "
             f"--model {model} --batch-size {batch_size} "
             f"--num-test-samples {num_samples} --dataset cifar10 "
+            f"--split-block {split_block} "
             f"> worker{rank}.log 2>&1 &"
         )
         
@@ -212,12 +213,12 @@ class AutomatedSplitTester:
         self.kill_existing_processes()
         
         # Start workers
-        self.start_worker(1)
+        self.start_worker(1, split_block=split_block)
         logger.info("Worker 1 start command sent")
         
         time.sleep(3)
         
-        self.start_worker(2)
+        self.start_worker(2, split_block=split_block)
         logger.info("Worker 2 start command sent")
         
         # Wait for workers to be ready

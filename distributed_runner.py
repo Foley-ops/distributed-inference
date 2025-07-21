@@ -884,7 +884,7 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             rpc_backend_options = rpc.TensorPipeRpcBackendOptions(
                 num_worker_threads=num_threads,
                 rpc_timeout=3600,
-                init_method=f"tcp://0.0.0.0:{master_port}"
+                init_method=f"tcp://{master_addr}:{master_port}"
             )
             
             logger.info("[MASTER RPC] Calling rpc.init_rpc...")
