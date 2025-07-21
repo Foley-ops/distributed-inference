@@ -585,6 +585,7 @@ class EnhancedDistributedModel(nn.Module):
                     'num_classes': self.num_classes,
                     'shard_id': 0,
                     'total_shards': 2,
+                    'split_block': self.split_block,
                     'layers': []
                 }
                 for i in range(split_point):
@@ -602,6 +603,7 @@ class EnhancedDistributedModel(nn.Module):
                     'num_classes': self.num_classes,
                     'shard_id': 1,
                     'total_shards': 2,
+                    'split_block': self.split_block,
                     'layers': []
                 }
                 # Get total number of feature blocks
@@ -629,6 +631,7 @@ class EnhancedDistributedModel(nn.Module):
                         'num_classes': self.num_classes,
                         'shard_id': i,
                         'total_shards': len(self.shards),
+                        'split_block': self.split_block,
                         'layers': []
                     }
                     # Add the shard modules directly (fallback approach)
