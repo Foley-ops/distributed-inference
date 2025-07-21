@@ -408,10 +408,13 @@ class AutomatedSplitTester:
                                     metrics['throughput'] = float(last_row['images_per_second'])
                                 if 'total_images_processed' in last_row:
                                     metrics['images_processed'] = int(last_row['total_images_processed'])
-                                if 'average_processing_time_ms' in last_row:
-                                    metrics['avg_processing_time'] = float(last_row['average_processing_time_ms'])
+                                if 'average_processing_time_ms' in last_row and last_row['average_processing_time_ms']:
+                                    try:
+                                        metrics['avg_processing_time'] = float(last_row['average_processing_time_ms'])
+                                    except ValueError:
+                                        pass
                 
-                    # Look for batch metrics CSV files for accuracy
+                    # Look for batch metrics CSV files for accuracy and pipeline utilization
                     batch_csv_files = glob_module.glob(os.path.join(metrics_dir, 'batch_metrics_*_rank_0_*.csv'))
                     if batch_csv_files:
                         latest_batch_csv = max(batch_csv_files, key=os.path.getmtime)
@@ -419,15 +422,25 @@ class AutomatedSplitTester:
                         with open(latest_batch_csv, 'r') as f:
                             reader = csv.DictReader(f)
                             accuracies = []
+                            pipeline_utilizations = []
                             total_time = 0
                             for row in reader:
                                 if 'accuracy' in row and row['accuracy']:
                                     accuracies.append(float(row['accuracy']))
+                                if 'pipeline_utilization' in row and row['pipeline_utilization']:
+                                    try:
+                                        util_value = float(row['pipeline_utilization'])
+                                        pipeline_utilizations.append(util_value)
+                                    except ValueError:
+                                        pass
                                 if 'total_time_ms' in row and row['total_time_ms']:
                                     total_time = max(total_time, float(row['total_time_ms']))
                             
                             if accuracies:
                                 metrics['accuracy'] = sum(accuracies) / len(accuracies)
+                            if pipeline_utilizations:
+                                # Use average of all pipeline utilization values
+                                metrics['pipeline_utilization'] = sum(pipeline_utilizations) / len(pipeline_utilizations)
                             if total_time > 0:
                                 metrics['total_time'] = total_time / 1000.0  # Convert ms to seconds
             
@@ -602,7 +615,7 @@ def main():
         split_blocks=split_blocks,
         runs_per_split=args.runs,
         worker_wait_time=args.wait_time,
-        use_pipelining=False,  # Always use pipelining by default, but can be changed
+        use_pipelining=True,  # Always use pipelining by default, but can be changed
         use_optimizations=not args.no_optimizations
     )
 

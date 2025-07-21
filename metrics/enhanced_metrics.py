@@ -386,8 +386,20 @@ class EnhancedMetricsCollector:
             'avg_memory_usage_mb': avg_memory,
             'avg_cpu_usage_percent': avg_cpu,
             'avg_network_latency_ms': avg_rpc_total_ms,  # This is really total RPC time
-            'avg_throughput_mbps': avg_network_overhead_ms  # This is really network overhead in ms
+            'avg_throughput_mbps': avg_network_overhead_ms,  # This is really network overhead in ms
+            'average_pipeline_utilization': self.get_pipeline_efficiency_stats().get('average_pipeline_utilization', 0)
         }
+    
+    def merge_summary(self, other_summary: Dict[str, Any]):
+        """Merge another device's summary into this collector."""
+        # For now, just log it - could aggregate if needed
+        if other_summary:
+            self.logger.info(f"Merging summary from device {other_summary.get('device_id', 'unknown')}")
+            # In a real implementation, you might want to:
+            # - Add to total images processed
+            # - Update average metrics
+            # - Combine pipeline stages
+            # For now, we'll just ensure the data is available in logs
     
     def write_device_summary_to_csv(self, model_name: str = ""):
         """Write device summary to CSV."""

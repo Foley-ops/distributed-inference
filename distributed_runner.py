@@ -63,12 +63,12 @@ class EnhancedShardWrapper(nn.Module):
                 rank = 0
             self.metrics_collector = EnhancedMetricsCollector(rank)
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
         """Forward pass with enhanced metrics collection."""
         if not isinstance(x, torch.Tensor):
             raise TypeError(f"Expected torch.Tensor but got {type(x)}")
         
-        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} processing tensor shape: {x.shape}")
+        logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} processing tensor shape: {x.shape}, batch_id={batch_id}")
         
         x = x.to("cpu")
         start_time = time.time()
@@ -82,7 +82,7 @@ class EnhancedShardWrapper(nn.Module):
         # Record stage metrics
         if self.metrics_collector:
             self.metrics_collector.record_pipeline_stage(
-                batch_id=0,  # This would need to be passed from the pipeline
+                batch_id=batch_id if batch_id is not None else 0,
                 stage_id=self.shard_id,
                 stage_name=f"shard_{self.shard_id}",
                 start_time=start_time,
@@ -90,6 +90,7 @@ class EnhancedShardWrapper(nn.Module):
                 input_size_bytes=x.numel() * x.element_size(),
                 output_size_bytes=output.numel() * output.element_size()
             )
+            logging.info(f"[METRICS DEBUG] Recorded stage metrics for shard {self.shard_id}, batch_id={batch_id}, start={start_time:.3f}, end={end_time:.3f}")
         
         logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} completed: {output.shape}")
         return output
@@ -256,14 +257,14 @@ class LocalLoadingShardWrapper(nn.Module):
         """Check if shard is loaded and ready."""
         return self.module is not None
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
         """Forward pass with enhanced metrics collection."""
         logger = logging.getLogger(__name__)
         
         if not isinstance(x, torch.Tensor):
             raise TypeError(f"Expected torch.Tensor but got {type(x)}")
         
-        logger.info(f"[FORWARD PASS] [{socket.gethostname()}] Shard {self.shard_id} received tensor shape: {x.shape}")
+        logger.info(f"[FORWARD PASS] [{socket.gethostname()}] Shard {self.shard_id} received tensor shape: {x.shape}, batch_id={batch_id}")
         
         x = x.to("cpu")
         logger.info(f"[FORWARD PASS] Shard {self.shard_id} starting computation")
@@ -281,7 +282,7 @@ class LocalLoadingShardWrapper(nn.Module):
         # Record stage metrics
         if self.metrics_collector:
             self.metrics_collector.record_pipeline_stage(
-                batch_id=0,
+                batch_id=batch_id if batch_id is not None else 0,
                 stage_id=self.shard_id,
                 stage_name=f"shard_{self.shard_id}",
                 start_time=start_time,
@@ -289,6 +290,9 @@ class LocalLoadingShardWrapper(nn.Module):
                 input_size_bytes=x.numel() * x.element_size(),
                 output_size_bytes=output.numel() * output.element_size()
             )
+            logger.info(f"[METRICS DEBUG] Recorded stage metrics for shard {self.shard_id}, batch_id={batch_id}, start={start_time:.3f}, end={end_time:.3f}")
+        else:
+            logger.warning(f"[METRICS DEBUG] No metrics collector for shard {self.shard_id}!")
         
         logger.info(f"[FORWARD PASS] [{socket.gethostname()}] Shard {self.shard_id} returning output shape: {output.shape}")
         return output
@@ -763,7 +767,7 @@ class EnhancedDistributedModel(nn.Module):
             start_time = time.time()
             self.logger.info(f"[FORWARD SEQUENTIAL] Making RPC call to shard {i}")
             
-            current_tensor = shard_rref.rpc_sync().forward(current_tensor)
+            current_tensor = shard_rref.rpc_sync().forward(current_tensor, batch_id=batch_id)
             
             end_time = time.time()
             rpc_time = (end_time - start_time) * 1000  # Convert to ms
@@ -1114,6 +1118,39 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         logger.info(f"Collected enhanced summary from {worker_name}")
                 except Exception as e:
                     logger.warning(f"Failed to collect summary from {worker_name}: {e}")
+            
+            # Aggregate worker metrics
+            logger.info("=== Aggregated Worker Metrics ===")
+            if worker_summaries:
+                # Simple aggregation
+                num_workers = len(worker_summaries)
+                agg_ips = sum(s.get('images_per_second', 0) for s in worker_summaries) / num_workers
+                agg_proc_time = sum(s.get('average_processing_time_ms', 0) for s in worker_summaries) / num_workers
+                agg_util = sum(s.get('average_pipeline_utilization', 0) for s in worker_summaries) / num_workers
+                agg_network_latency = sum(s.get('avg_network_latency_ms', 0) for s in worker_summaries) / num_workers
+                agg_throughput = sum(s.get('avg_throughput_mbps', 0) for s in worker_summaries)  # Sum throughput
+                
+                logger.info(f"Aggregated images per second (avg per worker): {agg_ips:.2f}")
+                logger.info(f"Aggregated average processing time: {agg_proc_time:.2f}ms")
+                logger.info(f"Aggregated pipeline utilization: {agg_util:.2f}")
+                logger.info(f"Aggregated network latency: {agg_network_latency:.2f}ms")
+                logger.info(f"Aggregated throughput (total): {agg_throughput:.2f}mbps")
+                
+                # Log per-worker details for debugging
+                for idx, summary in enumerate(worker_summaries):
+                    logger.info(f"Worker {idx+1} details:")
+                    logger.info(f"  Images per second: {summary.get('images_per_second', 0):.2f}")
+                    logger.info(f"  Average processing time: {summary.get('average_processing_time_ms', 0):.2f}ms")
+                    logger.info(f"  Pipeline utilization: {summary.get('average_pipeline_utilization', 0):.2f}")
+                    
+                # Merge summaries into master's collector
+                for summary in worker_summaries:
+                    if hasattr(metrics_collector, 'merge_summary'):
+                        metrics_collector.merge_summary(summary)
+                    else:
+                        logger.warning("Metrics collector doesn't have merge_summary method")
+            else:
+                logger.warning("No worker summaries collected—check RPC connections or worker collectors.")
             
             # Final metrics collection
             pipeline_stats = model.pipeline_manager.get_pipeline_stats() if model.pipeline_manager else {}
