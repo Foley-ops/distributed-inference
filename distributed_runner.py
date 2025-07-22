@@ -1166,10 +1166,8 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
         except Exception as e:
             logger.error(f"Error in enhanced master node: {e}", exc_info=True)
         finally:
-            # Signal workers to shutdown
-            logger.info("[MASTER] Signaling workers to shutdown...")
-            rpc.barrier()
-            logger.info("[MASTER] Workers acknowledged shutdown")
+            # Master completes its work
+            logger.info("[MASTER] Master work complete, preparing for shutdown...")
             
             # Cleanup prefetch loader if used
             if enable_prefetch and 'test_loader' in locals() and hasattr(test_loader, 'stop'):
@@ -1205,10 +1203,11 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 logger.info(f"[WORKER RPC] Worker {rank} connected successfully!")
                 logger.info("[WORKER] Ready to receive shard deployments")
                 
-                # Wait for master to signal completion
-                logger.info("[WORKER] Waiting for master to complete inference...")
-                rpc.barrier()
-                logger.info("[WORKER] Received shutdown signal from master")
+                # Worker stays alive until shutdown is called
+                logger.info("[WORKER] Worker ready and waiting for RPC calls...")
+                
+                # Exit the retry loop successfully
+                break
                 
             except Exception as e:
                 retry_count += 1
@@ -1219,6 +1218,17 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 wait_time = 10 + (retry_count % 5)
                 logger.info(f"[WORKER RPC] Waiting {wait_time}s before retry...")
                 time.sleep(wait_time)
+        
+        # If worker connected successfully, wait here until RPC framework shuts down
+        if connected:
+            logger.info("[WORKER] Entering wait loop - worker will stay alive until RPC shutdown")
+            try:
+                # This loop keeps the worker alive
+                while rpc._is_current_rpc_agent_set():
+                    time.sleep(1)
+            except Exception as e:
+                logger.info(f"[WORKER] Wait loop exited: {e}")
+            logger.info("[WORKER] RPC agent no longer set, proceeding to cleanup")
     
     # Cleanup
     if rpc_initialized:

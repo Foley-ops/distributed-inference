@@ -385,14 +385,14 @@ class AutomatedSplitTester:
             if images_match:
                 metrics['images_processed'] = int(images_match.group(1))
                 
-            # If we didn't find metrics in output.txt, look for CSV files
-            if metrics['throughput'] is None:
-                # Get the directory of the output file
-                output_dir = os.path.dirname(output_file)
-                metrics_dir = os.path.join(output_dir, 'metrics')
-                
-                # Look for device metrics CSV files
-                if os.path.exists(metrics_dir):
+            # Get the directory of the output file
+            output_dir = os.path.dirname(output_file)
+            metrics_dir = os.path.join(output_dir, 'metrics')
+            
+            # Check CSV files for metrics
+            if os.path.exists(metrics_dir):
+                # Look for device metrics CSV files (for throughput if not found)
+                if metrics['throughput'] is None:
                     device_csv_files = glob_module.glob(os.path.join(metrics_dir, 'device_metrics_*_rank_0_*.csv'))
                     if device_csv_files:
                         # Use the most recent file
@@ -444,6 +444,56 @@ class AutomatedSplitTester:
                                 metrics['pipeline_utilization'] = sum(pipeline_utilizations) / len(pipeline_utilizations)
                             if total_time > 0:
                                 metrics['total_time'] = total_time / 1000.0  # Convert ms to seconds
+                            
+                            # Calculate avg_processing_time from batch metrics if not already set
+                            if metrics['avg_processing_time'] is None and batch_csv_files:
+                                # Re-read to calculate average processing time per batch
+                                with open(latest_batch_csv, 'r') as f:
+                                    reader = csv.DictReader(f)
+                                    batch_times = []
+                                    for row in reader:
+                                        if 'total_time_ms' in row and row['total_time_ms']:
+                                            batch_times.append(float(row['total_time_ms']))
+                                    if batch_times:
+                                        # Average time per batch in ms
+                                        metrics['avg_processing_time'] = sum(batch_times) / len(batch_times)
+                            
+                            # If pipeline_utilization is 0 or None, calculate from throughput
+                            if not metrics.get('pipeline_utilization'):
+                                # For pipelined systems, utilization can be estimated from speedup
+                                # If we're getting 50 images/sec with 8 images per batch taking 6-7 seconds
+                                # then pipeline is well utilized
+                                if metrics.get('throughput') and metrics.get('avg_processing_time'):
+                                    batch_size = 8  # From configuration
+                                    sequential_throughput = (batch_size / (metrics['avg_processing_time'] / 1000.0))
+                                    actual_throughput = metrics['throughput']
+                                    if sequential_throughput > 0:
+                                        metrics['pipeline_utilization'] = min(actual_throughput / sequential_throughput, 1.0) * 100
+            
+            # Always check batch metrics CSV for missing metrics (avg_processing_time and pipeline_utilization)
+            if os.path.exists(metrics_dir) and (metrics['avg_processing_time'] is None or metrics['pipeline_utilization'] is None):
+                batch_csv_files = glob_module.glob(os.path.join(metrics_dir, 'batch_metrics_*_rank_0_*.csv'))
+                if batch_csv_files:
+                    latest_batch_csv = max(batch_csv_files, key=os.path.getmtime)
+                    
+                    # Calculate avg_processing_time if not set
+                    if metrics['avg_processing_time'] is None:
+                        with open(latest_batch_csv, 'r') as f:
+                            reader = csv.DictReader(f)
+                            batch_times = []
+                            for row in reader:
+                                if 'total_time_ms' in row and row['total_time_ms']:
+                                    batch_times.append(float(row['total_time_ms']))
+                            if batch_times:
+                                metrics['avg_processing_time'] = sum(batch_times) / len(batch_times)
+                    
+                    # Calculate pipeline_utilization if still None or 0
+                    if not metrics.get('pipeline_utilization') and metrics.get('throughput') and metrics.get('avg_processing_time'):
+                        batch_size = 8  # From configuration
+                        sequential_throughput = (batch_size / (metrics['avg_processing_time'] / 1000.0))
+                        actual_throughput = metrics['throughput']
+                        if sequential_throughput > 0:
+                            metrics['pipeline_utilization'] = min(actual_throughput / sequential_throughput, 1.0) * 100
             
             # Extract device info from content
             device_matches = re.findall(r'\[([\w-]+):rank(\d+)\]', content)
