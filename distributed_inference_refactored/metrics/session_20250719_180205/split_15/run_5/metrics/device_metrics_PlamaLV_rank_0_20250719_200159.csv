@@ -1,0 +1,2 @@
+device_id,hostname,rank,total_images_processed,total_processing_time_ms,images_per_second,average_processing_time_ms,avg_memory_usage_mb,avg_cpu_usage_percent,avg_network_latency_ms,avg_throughput_mbps,model_name,timestamp
+PlamaLV_rank_0,PlamaLV,0,100,38051.18727684021,2.6280388906777903,380.5118727684021,4081.0890526107596,6.064556962025317,1463.1419640320998,2.494969606789747,mobilenetv2,2025-07-19T20:02:39.600334

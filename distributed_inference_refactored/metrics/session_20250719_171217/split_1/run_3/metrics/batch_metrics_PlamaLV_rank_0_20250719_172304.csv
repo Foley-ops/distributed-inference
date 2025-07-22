@@ -1,0 +1,2 @@
+batch_id,batch_size,start_time,end_time,total_time_ms,pipeline_utilization,accuracy,images_per_second,model_name,num_devices,timestamp
+0,8,1752963786.3380942,1752963789.4734643,3135.3700160980225,0.0,75.0,2.5515329798158954,,1,2025-07-19T17:23:09.473531

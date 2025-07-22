@@ -1,0 +1,2 @@
+usage: distributed_runner.py [-h]
+distributed_runner.py: error: unrecognized arguments: --rank 0 --world-size 3 --model mobilenetv2 --batch-size 8 --num-test-samples 100 --dataset cifar10 --num-partitions 2 --split-block 5 --metrics-dir ./metrics/session_20250722_143145/split_5/run_1/metrics --use-pipelining --use-intelligent-splitting --use-local-loading --enable-prefetch --prefetch-batches 2

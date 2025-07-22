@@ -1,0 +1,291 @@
+2025-07-20 05:48:14,930 - INFO - Started real-time monitoring for PlamaLV_rank_0
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - Starting enhanced distributed inference
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER] ========================================
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER] Initializing master node with enhanced features
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER] Dataset: cifar10, Batch size: 8
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER] Model: mobilenetv2, Num splits: 1
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER] World size: 3, Num threads: 4
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER] ========================================
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER RPC] Initializing RPC backend on port 44444
+2025-07-20 05:48:14,930 - INFO - [PlamaLV:rank0] - [MASTER RPC] Calling rpc.init_rpc...
+/home/xfu601/Projects/distributed_inference/venv/lib/python3.10/site-packages/torch/cuda/__init__.py:146: UserWarning: 
+NVIDIA GeForce RTX 4090 with CUDA capability sm_89 is not compatible with the current PyTorch installation.
+The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
+If you want to use the NVIDIA GeForce RTX 4090 GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/
+
+  warnings.warn(incompatible_device_warn.format(device_name, capability, " ".join(arch_list), device_name))
+[W DispatchStub.cpp:37] Warning: ignoring invalid value for ATEN_CPU_CAPABILITY:  (function compute_cpu_capability)
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [MASTER RPC] RPC initialization successful
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [MASTER] Defined workers: ['worker1', 'worker2']
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [MASTER] Creating EnhancedDistributedModel...
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] ========== Starting EnhancedDistributedModel initialization ==========
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Model type: mobilenetv2, Num splits: 1
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Workers: ['worker1', 'worker2']
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Split block: 18, Use local loading: True
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Use intelligent splitting: True
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Use pipelining: True
+2025-07-20 05:48:15,766 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Loading model from ./models
+2025-07-20 05:48:15,807 - INFO - [PlamaLV:rank0] - Loaded weights for mobilenetv2 from ./models/mobilenetv2_100epochs_jul15.pth
+2025-07-20 05:48:15,807 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Model loaded successfully: <class 'torchvision.models.mobilenetv2.MobileNetV2'>
+2025-07-20 05:48:15,807 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Starting model profiling for intelligent splitting
+2025-07-20 05:48:15,807 - INFO - [PlamaLV:rank0] - Profiling model: mobilenetv2
+2025-07-20 05:48:15,808 - INFO - [PlamaLV:rank0] - Starting enhanced profiling for model: mobilenetv2
+2025-07-20 05:48:15,850 - INFO - [PlamaLV:rank0] - Profiled layer features.0.0: 0.16ms, 0.34MB
+2025-07-20 05:48:15,851 - INFO - [PlamaLV:rank0] - Profiled layer features.0.1: 0.03ms, 0.00MB
+2025-07-20 05:48:15,852 - INFO - [PlamaLV:rank0] - Profiled layer features.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,855 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.0.0: 0.22ms, 0.34MB
+2025-07-20 05:48:15,856 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.0.1: 0.03ms, 0.00MB
+2025-07-20 05:48:15,857 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,859 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.1: 0.13ms, 0.00MB
+2025-07-20 05:48:15,860 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.2: 0.02ms, 0.00MB
+2025-07-20 05:48:15,866 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.0.0: 0.53ms, 3.54MB
+2025-07-20 05:48:15,868 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.0.1: 0.23ms, 0.97MB
+2025-07-20 05:48:15,869 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.0.2: 0.02ms, 0.00MB
+2025-07-20 05:48:15,875 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.1.0: 0.46ms, 0.69MB
+2025-07-20 05:48:15,876 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,877 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,880 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.2: 0.12ms, 0.00MB
+2025-07-20 05:48:15,881 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.3: 0.02ms, 0.00MB
+2025-07-20 05:48:15,883 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.0.0: 0.20ms, 0.00MB
+2025-07-20 05:48:15,884 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.0.1: 0.03ms, 0.00MB
+2025-07-20 05:48:15,885 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,888 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.1.0: 0.27ms, 0.69MB
+2025-07-20 05:48:15,891 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.1.1: 0.11ms, 0.20MB
+2025-07-20 05:48:15,892 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,894 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.2: 0.14ms, 0.00MB
+2025-07-20 05:48:15,895 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.3: 0.02ms, 0.00MB
+2025-07-20 05:48:15,898 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.0.0: 0.20ms, 0.00MB
+2025-07-20 05:48:15,899 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.0.1: 0.03ms, 0.00MB
+2025-07-20 05:48:15,900 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,902 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.1.0: 0.12ms, 0.00MB
+2025-07-20 05:48:15,903 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,904 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,905 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.2: 0.07ms, 0.00MB
+2025-07-20 05:48:15,906 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,908 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.0.0: 0.08ms, 0.00MB
+2025-07-20 05:48:15,909 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,910 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,912 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.1.0: 0.09ms, 0.00MB
+2025-07-20 05:48:15,913 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.1.1: 0.03ms, 0.00MB
+2025-07-20 05:48:15,914 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,915 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.2: 0.08ms, 0.00MB
+2025-07-20 05:48:15,916 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,918 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.0.0: 0.08ms, 0.00MB
+2025-07-20 05:48:15,919 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,920 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,921 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.1.0: 0.09ms, 0.00MB
+2025-07-20 05:48:15,922 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,923 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,925 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.2: 0.07ms, 0.00MB
+2025-07-20 05:48:15,926 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,927 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.0.0: 0.08ms, 0.00MB
+2025-07-20 05:48:15,928 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,929 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,931 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.1.0: 0.07ms, 0.00MB
+2025-07-20 05:48:15,932 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.1.1: 0.01ms, 0.00MB
+2025-07-20 05:48:15,932 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,934 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.2: 0.06ms, 0.00MB
+2025-07-20 05:48:15,935 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,936 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.0.0: 0.06ms, 0.00MB
+2025-07-20 05:48:15,937 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,938 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,940 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.1.0: 0.06ms, 0.00MB
+2025-07-20 05:48:15,941 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,942 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,943 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.2: 0.07ms, 0.00MB
+2025-07-20 05:48:15,944 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,945 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.0.0: 0.06ms, 0.00MB
+2025-07-20 05:48:15,946 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,947 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,949 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.1.0: 0.05ms, 0.00MB
+2025-07-20 05:48:15,950 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,950 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,952 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.2: 0.07ms, 0.00MB
+2025-07-20 05:48:15,953 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,954 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.0.0: 0.06ms, 0.00MB
+2025-07-20 05:48:15,955 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,956 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,957 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.1.0: 0.05ms, 0.00MB
+2025-07-20 05:48:15,958 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,960 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,961 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.2: 0.07ms, 0.00MB
+2025-07-20 05:48:15,962 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,963 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.0.0: 0.06ms, 0.00MB
+2025-07-20 05:48:15,964 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,965 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,967 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.1.0: 0.06ms, 0.00MB
+2025-07-20 05:48:15,968 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,969 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,970 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.2: 0.09ms, 0.00MB
+2025-07-20 05:48:15,971 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,973 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.0.0: 0.12ms, 0.00MB
+2025-07-20 05:48:15,974 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,975 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,977 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.1.0: 0.07ms, 0.00MB
+2025-07-20 05:48:15,978 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,979 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,981 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.2: 0.10ms, 0.00MB
+2025-07-20 05:48:15,982 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,983 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.0.0: 0.12ms, 0.00MB
+2025-07-20 05:48:15,984 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,985 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,987 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.1.0: 0.07ms, 0.00MB
+2025-07-20 05:48:15,988 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,988 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,990 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.2: 0.10ms, 0.00MB
+2025-07-20 05:48:15,991 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:15,993 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.0.0: 0.12ms, 0.00MB
+2025-07-20 05:48:15,994 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,995 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:15,996 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.1.0: 0.06ms, 0.00MB
+2025-07-20 05:48:15,997 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:15,998 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,000 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.2: 0.07ms, 0.00MB
+2025-07-20 05:48:16,001 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:16,003 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.0.0: 0.12ms, 0.00MB
+2025-07-20 05:48:16,004 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:16,004 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,006 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.1.0: 0.05ms, 0.00MB
+2025-07-20 05:48:16,007 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:16,008 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,009 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.2: 0.08ms, 0.00MB
+2025-07-20 05:48:16,010 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:16,012 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.0.0: 0.12ms, 0.00MB
+2025-07-20 05:48:16,013 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:16,014 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,015 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.1.0: 0.05ms, 0.00MB
+2025-07-20 05:48:16,016 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:16,017 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,019 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.2: 0.09ms, 0.00MB
+2025-07-20 05:48:16,020 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:16,022 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.0.0: 0.12ms, 0.00MB
+2025-07-20 05:48:16,023 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.0.1: 0.02ms, 0.00MB
+2025-07-20 05:48:16,023 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.0.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,025 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.1.0: 0.05ms, 0.00MB
+2025-07-20 05:48:16,026 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.1.1: 0.02ms, 0.00MB
+2025-07-20 05:48:16,027 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.1.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,028 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.2: 0.10ms, 0.00MB
+2025-07-20 05:48:16,029 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.3: 0.01ms, 0.00MB
+2025-07-20 05:48:16,033 - INFO - [PlamaLV:rank0] - Profiled layer features.18.0: 0.29ms, 0.00MB
+2025-07-20 05:48:16,034 - INFO - [PlamaLV:rank0] - Profiled layer features.18.1: 0.02ms, 0.00MB
+2025-07-20 05:48:16,034 - INFO - [PlamaLV:rank0] - Profiled layer features.18.2: 0.01ms, 0.00MB
+2025-07-20 05:48:16,035 - INFO - [PlamaLV:rank0] - Profiled layer classifier.0: 0.00ms, 0.00MB
+2025-07-20 05:48:16,036 - INFO - [PlamaLV:rank0] - Profiled layer classifier.1: 0.01ms, 0.00MB
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] - Added functional operation: functional.adaptive_avg_pool2d after features.18.2
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] - 
+Block-level execution summary:
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 0: 0.20ms, 928 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 1: 0.42ms, 896 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 2: 1.42ms, 5,136 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 3: 0.80ms, 8,832 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 4: 0.46ms, 10,000 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 5: 0.32ms, 14,848 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 6: 0.31ms, 14,848 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 7: 0.26ms, 21,056 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 8: 0.25ms, 54,272 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 9: 0.24ms, 54,272 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 10: 0.25ms, 54,272 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 11: 0.26ms, 66,624 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 12: 0.36ms, 118,272 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 13: 0.36ms, 118,272 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 14: 0.31ms, 155,264 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 15: 0.32ms, 320,000 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 16: 0.32ms, 320,000 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 17: 0.33ms, 473,920 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] -   Block 18: 0.32ms, 412,160 params
+2025-07-20 05:48:16,037 - INFO - [PlamaLV:rank0] - Completed enhanced profiling for mobilenetv2: 142 operations profiled
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Model profile saved to: ./profiles/mobilenetv2_profile.json
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Total model execution time: 7.54ms
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Total model parameters: 2,236,682
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Starting model splitting
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Using block-level splitting (reference implementation style)
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Model has 19 feature blocks
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Using user-specified split block: 18
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Splitting at block 18 (reference style)
+2025-07-20 05:48:16,039 - INFO - [PlamaLV:rank0] - Shard 1: Adding explicit AdaptiveAvgPool2d and Flatten for features→classifier transition
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - Created 2 shards from block-level split
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - Shard 1 parameters: 1,811,712 (81.0%)
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - Shard 2 parameters: 424,970 (19.0%)
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - Split ratio: Shard1=81.0%, Shard2=19.0%
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Model split into 2 shards
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Deploying shards to 2 workers
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Starting shard deployment
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Using local loading mode - creating shard configurations
+2025-07-20 05:48:16,040 - WARNING - [PlamaLV:rank0] - No pre-split metadata found at ./model_shards/split_18/mobilenetv2_shards_metadata.json
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Created 2 shard configurations
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Deploying shard 0 to worker worker1
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Config: shard_id=0, model_type=mobilenetv2, split_block=None
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Successfully deployed shard 0 to worker1 (took 0.000s)
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Deploying shard 1 to worker worker2
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Config: shard_id=1, model_type=mobilenetv2, split_block=None
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Successfully deployed shard 1 to worker2 (took 0.000s)
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Deployment complete - created 2 RRefs
+2025-07-20 05:48:16,040 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Waiting for all workers to finish loading shards...
+2025-07-20 05:48:16,447 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Worker worker1 confirmed shard 0 is loaded
+2025-07-20 05:48:16,450 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Worker worker2 confirmed shard 1 is loaded
+2025-07-20 05:48:16,450 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] All workers have finished loading their shards
+2025-07-20 05:48:16,450 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Successfully deployed 2 shard RRefs
+2025-07-20 05:48:16,450 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Setting up pipeline manager
+2025-07-20 05:48:16,451 - INFO - [PlamaLV:rank0] - Setting up pipeline for pipelined execution
+2025-07-20 05:48:16,451 - INFO - [PlamaLV:rank0] - Setting up RPC distributed pipeline
+2025-07-20 05:48:16,453 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] ========== EnhancedDistributedModel initialization complete ==========
+2025-07-20 05:48:16,453 - INFO - [PlamaLV:rank0] - [MASTER] Enhanced distributed model created successfully in 0.69s
+2025-07-20 05:48:16,453 - INFO - [PlamaLV:rank0] - [MASTER] Loading dataset cifar10...
+2025-07-20 05:48:16,680 - INFO - [PlamaLV:rank0] - [MASTER] Enabling prefetching with 2 batches
+2025-07-20 05:48:16,680 - INFO - [PlamaLV:rank0] - [MASTER] Dataset loaded in 0.23s: cifar10 (batch_size=8)
+2025-07-20 05:48:16,680 - INFO - [PlamaLV:rank0] - [MASTER] ========== Starting Inference ==========
+2025-07-20 05:48:16,680 - INFO - [PlamaLV:rank0] - [MASTER] Starting inference with 100 test samples
+2025-07-20 05:48:16,680 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Using PIPELINED inference mode for maximum throughput
+2025-07-20 05:48:16,680 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Pipeline manager initialized and ready
+2025-07-20 05:48:16,687 - INFO - [PlamaLV:rank0] - Starting batch 1 with 8 images (pipeline)
+2025-07-20 05:48:16,692 - INFO - [PlamaLV:rank0] - Starting batch 2 with 8 images (pipeline)
+2025-07-20 05:48:16,695 - INFO - [PlamaLV:rank0] - Starting batch 3 with 8 images (pipeline)
+2025-07-20 05:48:23,165 - INFO - [PlamaLV:rank0] - Completed batch 2: 6469.50ms, 1.24 IPS
+2025-07-20 05:48:23,165 - INFO - [PlamaLV:rank0] - Completed batch 3 accuracy: 100.00%
+2025-07-20 05:48:23,165 - INFO - [PlamaLV:rank0] - Starting batch 4 with 8 images (pipeline)
+2025-07-20 05:48:23,770 - INFO - [PlamaLV:rank0] - Completed batch 0: 7083.25ms, 1.13 IPS
+2025-07-20 05:48:23,771 - INFO - [PlamaLV:rank0] - Completed batch 1 accuracy: 75.00%
+2025-07-20 05:48:23,791 - INFO - [PlamaLV:rank0] - Starting batch 5 with 8 images (pipeline)
+2025-07-20 05:48:24,084 - INFO - [PlamaLV:rank0] - Completed batch 1: 7392.29ms, 1.08 IPS
+2025-07-20 05:48:24,084 - INFO - [PlamaLV:rank0] - Completed batch 2 accuracy: 100.00%
+2025-07-20 05:48:24,104 - INFO - [PlamaLV:rank0] - Starting batch 6 with 8 images (pipeline)
+2025-07-20 05:48:29,958 - INFO - [PlamaLV:rank0] - Completed batch 4: 6167.48ms, 1.30 IPS
+2025-07-20 05:48:29,958 - INFO - [PlamaLV:rank0] - Completed batch 5 accuracy: 75.00%
+2025-07-20 05:48:29,969 - INFO - [PlamaLV:rank0] - Starting batch 7 with 8 images (pipeline)
+2025-07-20 05:48:30,493 - INFO - [PlamaLV:rank0] - Completed batch 3: 7328.28ms, 1.09 IPS
+2025-07-20 05:48:30,493 - INFO - [PlamaLV:rank0] - Completed batch 4 accuracy: 87.50%
+2025-07-20 05:48:30,514 - INFO - [PlamaLV:rank0] - Starting batch 8 with 8 images (pipeline)
+2025-07-20 05:48:30,554 - INFO - [PlamaLV:rank0] - Completed batch 5: 6450.17ms, 1.24 IPS
+2025-07-20 05:48:30,555 - INFO - [PlamaLV:rank0] - Completed batch 6 accuracy: 75.00%
+2025-07-20 05:48:30,575 - INFO - [PlamaLV:rank0] - Starting batch 9 with 8 images (pipeline)
+2025-07-20 05:48:36,480 - INFO - [PlamaLV:rank0] - Completed batch 8: 5905.02ms, 1.35 IPS
+2025-07-20 05:48:36,480 - INFO - [PlamaLV:rank0] - Completed batch 9 accuracy: 75.00%
+2025-07-20 05:48:36,480 - INFO - [PlamaLV:rank0] - Starting batch 10 with 8 images (pipeline)
+2025-07-20 05:48:37,327 - INFO - [PlamaLV:rank0] - Completed batch 6: 7358.68ms, 1.09 IPS
+2025-07-20 05:48:37,327 - INFO - [PlamaLV:rank0] - Completed batch 7 accuracy: 75.00%
+2025-07-20 05:48:37,348 - INFO - [PlamaLV:rank0] - Starting batch 11 with 8 images (pipeline)
+2025-07-20 05:48:38,074 - INFO - [PlamaLV:rank0] - Completed batch 7: 7560.41ms, 1.06 IPS
+2025-07-20 05:48:38,120 - INFO - [PlamaLV:rank0] - Completed batch 8 accuracy: 87.50%
+2025-07-20 05:48:38,140 - INFO - [PlamaLV:rank0] - Starting batch 12 with 8 images (pipeline)
+2025-07-20 05:48:43,510 - INFO - [PlamaLV:rank0] - Completed batch 9: 7030.18ms, 1.14 IPS
+2025-07-20 05:48:43,510 - INFO - [PlamaLV:rank0] - Completed batch 10 accuracy: 100.00%
+2025-07-20 05:48:43,531 - INFO - [PlamaLV:rank0] - Starting batch 13 with 4 images (pipeline)
+2025-07-20 05:48:43,572 - INFO - [PlamaLV:rank0] - Waiting for final batches to complete...
+2025-07-20 05:48:43,773 - INFO - [PlamaLV:rank0] - Completed batch 11: 5633.25ms, 1.42 IPS
+2025-07-20 05:48:43,773 - INFO - [PlamaLV:rank0] - Completed batch 12 accuracy: 87.50%
+2025-07-20 05:48:44,086 - INFO - [PlamaLV:rank0] - Completed batch 10: 6738.23ms, 1.19 IPS
+2025-07-20 05:48:44,086 - INFO - [PlamaLV:rank0] - Completed batch 11 accuracy: 87.50%
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - Completed batch 12: 2097.08ms, 1.91 IPS
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - Completed batch 13 accuracy: 100.00%
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - [MASTER] ========== Inference Complete ==========
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Total images processed: 100
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Total time: 2.10s
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Final accuracy: 86.00%
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Overall throughput: 47.68 images/sec
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - Actual per-image latency: 20.97ms
+2025-07-20 05:48:45,628 - INFO - [PlamaLV:rank0] - Collecting enhanced metrics from workers...
+2025-07-20 05:48:45,630 - INFO - [PlamaLV:rank0] - Collected enhanced summary from worker1
+2025-07-20 05:48:45,631 - INFO - [PlamaLV:rank0] - Collected enhanced summary from worker2
+2025-07-20 05:48:45,634 - INFO - [PlamaLV:rank0] - === Pipeline Statistics ===
+2025-07-20 05:48:45,634 - INFO - [PlamaLV:rank0] - Pipeline utilization: 0.00
+2025-07-20 05:48:45,634 - INFO - [PlamaLV:rank0] - Active batches: 0

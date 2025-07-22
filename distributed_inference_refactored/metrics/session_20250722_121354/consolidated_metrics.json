@@ -1,0 +1,32 @@
+{
+  "session_id": "20250722_121354",
+  "timestamp": "2025-07-22T12:20:26.073595",
+  "configuration": {
+    "model": "mobilenetv2",
+    "dataset": "cifar10",
+    "batch_size": 8,
+    "num_samples": 100,
+    "pipelining": true,
+    "world_size": 3
+  },
+  "device_mapping": {
+    "rank0": "orchestrator (local)",
+    "rank1": "master-pi",
+    "rank2": "core-pi"
+  },
+  "results": {
+    "5": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": null,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,192 @@
+2025-07-22 14:37:44,761 - INFO - Started real-time monitoring for PlamaLV_rank_0
+/home/xfu601/Projects/distributed_inference/venv/lib/python3.10/site-packages/torch/cuda/__init__.py:146: UserWarning: 
+NVIDIA GeForce RTX 4090 with CUDA capability sm_89 is not compatible with the current PyTorch installation.
+The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
+If you want to use the NVIDIA GeForce RTX 4090 GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/
+
+  warnings.warn(incompatible_device_warn.format(device_name, capability, " ".join(arch_list), device_name))
+[W DispatchStub.cpp:37] Warning: ignoring invalid value for ATEN_CPU_CAPABILITY:  (function compute_cpu_capability)
+2025-07-22 14:37:56,529 - INFO - Loaded weights for mobilenetv2 from ./models/mobilenetv2_100epochs_jul15.pth
+2025-07-22 14:37:56,530 - INFO - Starting enhanced profiling for model: mobilenetv2
+2025-07-22 14:37:56,574 - INFO - Profiled layer features.0.0: 0.10ms, 0.20MB
+2025-07-22 14:37:56,579 - INFO - Profiled layer features.0.1: 0.03ms, 0.00MB
+2025-07-22 14:37:56,583 - INFO - Profiled layer features.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,593 - INFO - Profiled layer features.1.conv.0.0: 0.19ms, 0.00MB
+2025-07-22 14:37:56,598 - INFO - Profiled layer features.1.conv.0.1: 0.03ms, 0.00MB
+2025-07-22 14:37:56,602 - INFO - Profiled layer features.1.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,611 - INFO - Profiled layer features.1.conv.1: 0.15ms, 0.00MB
+2025-07-22 14:37:56,615 - INFO - Profiled layer features.1.conv.2: 0.02ms, 0.00MB
+2025-07-22 14:37:56,635 - INFO - Profiled layer features.2.conv.0.0: 0.50ms, 1.19MB
+2025-07-22 14:37:56,641 - INFO - Profiled layer features.2.conv.0.1: 0.06ms, 0.00MB
+2025-07-22 14:37:56,645 - INFO - Profiled layer features.2.conv.0.2: 0.02ms, 0.00MB
+2025-07-22 14:37:56,662 - INFO - Profiled layer features.2.conv.1.0: 0.36ms, 0.10MB
+2025-07-22 14:37:56,666 - INFO - Profiled layer features.2.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,670 - INFO - Profiled layer features.2.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,678 - INFO - Profiled layer features.2.conv.2: 0.12ms, 0.00MB
+2025-07-22 14:37:56,682 - INFO - Profiled layer features.2.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,693 - INFO - Profiled layer features.3.conv.0.0: 0.18ms, 0.12MB
+2025-07-22 14:37:56,697 - INFO - Profiled layer features.3.conv.0.1: 0.03ms, 0.00MB
+2025-07-22 14:37:56,701 - INFO - Profiled layer features.3.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,713 - INFO - Profiled layer features.3.conv.1.0: 0.21ms, 0.15MB
+2025-07-22 14:37:56,717 - INFO - Profiled layer features.3.conv.1.1: 0.03ms, 0.00MB
+2025-07-22 14:37:56,721 - INFO - Profiled layer features.3.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,730 - INFO - Profiled layer features.3.conv.2: 0.14ms, 0.00MB
+2025-07-22 14:37:56,734 - INFO - Profiled layer features.3.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,744 - INFO - Profiled layer features.4.conv.0.0: 0.16ms, 0.00MB
+2025-07-22 14:37:56,748 - INFO - Profiled layer features.4.conv.0.1: 0.03ms, 0.00MB
+2025-07-22 14:37:56,752 - INFO - Profiled layer features.4.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,760 - INFO - Profiled layer features.4.conv.1.0: 0.11ms, 0.00MB
+2025-07-22 14:37:56,764 - INFO - Profiled layer features.4.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,768 - INFO - Profiled layer features.4.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,774 - INFO - Profiled layer features.4.conv.2: 0.06ms, 0.00MB
+2025-07-22 14:37:56,778 - INFO - Profiled layer features.4.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,785 - INFO - Profiled layer features.5.conv.0.0: 0.08ms, 0.00MB
+2025-07-22 14:37:56,789 - INFO - Profiled layer features.5.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,792 - INFO - Profiled layer features.5.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,799 - INFO - Profiled layer features.5.conv.1.0: 0.08ms, 0.00MB
+2025-07-22 14:37:56,803 - INFO - Profiled layer features.5.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,807 - INFO - Profiled layer features.5.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,813 - INFO - Profiled layer features.5.conv.2: 0.07ms, 0.00MB
+2025-07-22 14:37:56,817 - INFO - Profiled layer features.5.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,824 - INFO - Profiled layer features.6.conv.0.0: 0.08ms, 0.00MB
+2025-07-22 14:37:56,828 - INFO - Profiled layer features.6.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,832 - INFO - Profiled layer features.6.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,838 - INFO - Profiled layer features.6.conv.1.0: 0.08ms, 0.00MB
+2025-07-22 14:37:56,842 - INFO - Profiled layer features.6.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,846 - INFO - Profiled layer features.6.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,852 - INFO - Profiled layer features.6.conv.2: 0.07ms, 0.00MB
+2025-07-22 14:37:56,856 - INFO - Profiled layer features.6.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,862 - INFO - Profiled layer features.7.conv.0.0: 0.08ms, 0.00MB
+2025-07-22 14:37:56,866 - INFO - Profiled layer features.7.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,870 - INFO - Profiled layer features.7.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,877 - INFO - Profiled layer features.7.conv.1.0: 0.07ms, 0.00MB
+2025-07-22 14:37:56,881 - INFO - Profiled layer features.7.conv.1.1: 0.01ms, 0.00MB
+2025-07-22 14:37:56,884 - INFO - Profiled layer features.7.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,890 - INFO - Profiled layer features.7.conv.2: 0.06ms, 0.00MB
+2025-07-22 14:37:56,894 - INFO - Profiled layer features.7.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,900 - INFO - Profiled layer features.8.conv.0.0: 0.06ms, 0.00MB
+2025-07-22 14:37:56,904 - INFO - Profiled layer features.8.conv.0.1: 0.01ms, 0.00MB
+2025-07-22 14:37:56,907 - INFO - Profiled layer features.8.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,913 - INFO - Profiled layer features.8.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:56,917 - INFO - Profiled layer features.8.conv.1.1: 0.01ms, 0.00MB
+2025-07-22 14:37:56,921 - INFO - Profiled layer features.8.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,927 - INFO - Profiled layer features.8.conv.2: 0.07ms, 0.00MB
+2025-07-22 14:37:56,931 - INFO - Profiled layer features.8.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,936 - INFO - Profiled layer features.9.conv.0.0: 0.06ms, 0.00MB
+2025-07-22 14:37:56,940 - INFO - Profiled layer features.9.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,944 - INFO - Profiled layer features.9.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,950 - INFO - Profiled layer features.9.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:56,954 - INFO - Profiled layer features.9.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,958 - INFO - Profiled layer features.9.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,964 - INFO - Profiled layer features.9.conv.2: 0.07ms, 0.00MB
+2025-07-22 14:37:56,968 - INFO - Profiled layer features.9.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:56,973 - INFO - Profiled layer features.10.conv.0.0: 0.06ms, 0.00MB
+2025-07-22 14:37:56,977 - INFO - Profiled layer features.10.conv.0.1: 0.01ms, 0.00MB
+2025-07-22 14:37:56,981 - INFO - Profiled layer features.10.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:56,987 - INFO - Profiled layer features.10.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:56,991 - INFO - Profiled layer features.10.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:56,994 - INFO - Profiled layer features.10.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,001 - INFO - Profiled layer features.10.conv.2: 0.07ms, 0.00MB
+2025-07-22 14:37:57,004 - INFO - Profiled layer features.10.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,010 - INFO - Profiled layer features.11.conv.0.0: 0.06ms, 0.00MB
+2025-07-22 14:37:57,014 - INFO - Profiled layer features.11.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,018 - INFO - Profiled layer features.11.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,023 - INFO - Profiled layer features.11.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:57,027 - INFO - Profiled layer features.11.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,031 - INFO - Profiled layer features.11.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,038 - INFO - Profiled layer features.11.conv.2: 0.08ms, 0.00MB
+2025-07-22 14:37:57,041 - INFO - Profiled layer features.11.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,049 - INFO - Profiled layer features.12.conv.0.0: 0.12ms, 0.00MB
+2025-07-22 14:37:57,053 - INFO - Profiled layer features.12.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,057 - INFO - Profiled layer features.12.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,063 - INFO - Profiled layer features.12.conv.1.0: 0.06ms, 0.00MB
+2025-07-22 14:37:57,067 - INFO - Profiled layer features.12.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,071 - INFO - Profiled layer features.12.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,078 - INFO - Profiled layer features.12.conv.2: 0.10ms, 0.00MB
+2025-07-22 14:37:57,082 - INFO - Profiled layer features.12.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,090 - INFO - Profiled layer features.13.conv.0.0: 0.12ms, 0.00MB
+2025-07-22 14:37:57,094 - INFO - Profiled layer features.13.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,097 - INFO - Profiled layer features.13.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,103 - INFO - Profiled layer features.13.conv.1.0: 0.06ms, 0.00MB
+2025-07-22 14:37:57,107 - INFO - Profiled layer features.13.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,111 - INFO - Profiled layer features.13.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,118 - INFO - Profiled layer features.13.conv.2: 0.10ms, 0.00MB
+2025-07-22 14:37:57,122 - INFO - Profiled layer features.13.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,130 - INFO - Profiled layer features.14.conv.0.0: 0.12ms, 0.00MB
+2025-07-22 14:37:57,134 - INFO - Profiled layer features.14.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,138 - INFO - Profiled layer features.14.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,143 - INFO - Profiled layer features.14.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:57,147 - INFO - Profiled layer features.14.conv.1.1: 0.01ms, 0.00MB
+2025-07-22 14:37:57,151 - INFO - Profiled layer features.14.conv.1.2: 0.00ms, 0.00MB
+2025-07-22 14:37:57,157 - INFO - Profiled layer features.14.conv.2: 0.07ms, 0.00MB
+2025-07-22 14:37:57,161 - INFO - Profiled layer features.14.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,169 - INFO - Profiled layer features.15.conv.0.0: 0.12ms, 0.00MB
+2025-07-22 14:37:57,174 - INFO - Profiled layer features.15.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,177 - INFO - Profiled layer features.15.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,183 - INFO - Profiled layer features.15.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:57,187 - INFO - Profiled layer features.15.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,191 - INFO - Profiled layer features.15.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,198 - INFO - Profiled layer features.15.conv.2: 0.08ms, 0.00MB
+2025-07-22 14:37:57,202 - INFO - Profiled layer features.15.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,209 - INFO - Profiled layer features.16.conv.0.0: 0.12ms, 0.00MB
+2025-07-22 14:37:57,213 - INFO - Profiled layer features.16.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,217 - INFO - Profiled layer features.16.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,222 - INFO - Profiled layer features.16.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:57,227 - INFO - Profiled layer features.16.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,230 - INFO - Profiled layer features.16.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,238 - INFO - Profiled layer features.16.conv.2: 0.09ms, 0.00MB
+2025-07-22 14:37:57,241 - INFO - Profiled layer features.16.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,249 - INFO - Profiled layer features.17.conv.0.0: 0.12ms, 0.00MB
+2025-07-22 14:37:57,253 - INFO - Profiled layer features.17.conv.0.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,257 - INFO - Profiled layer features.17.conv.0.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,262 - INFO - Profiled layer features.17.conv.1.0: 0.05ms, 0.00MB
+2025-07-22 14:37:57,266 - INFO - Profiled layer features.17.conv.1.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,270 - INFO - Profiled layer features.17.conv.1.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,278 - INFO - Profiled layer features.17.conv.2: 0.11ms, 0.00MB
+2025-07-22 14:37:57,282 - INFO - Profiled layer features.17.conv.3: 0.01ms, 0.00MB
+2025-07-22 14:37:57,296 - INFO - Profiled layer features.18.0: 0.29ms, 0.00MB
+2025-07-22 14:37:57,300 - INFO - Profiled layer features.18.1: 0.02ms, 0.00MB
+2025-07-22 14:37:57,304 - INFO - Profiled layer features.18.2: 0.01ms, 0.00MB
+2025-07-22 14:37:57,307 - INFO - Profiled layer classifier.0: 0.00ms, 0.00MB
+2025-07-22 14:37:57,311 - INFO - Profiled layer classifier.1: 0.01ms, 0.00MB
+2025-07-22 14:37:57,313 - INFO - Added functional operation: functional.adaptive_avg_pool2d after features.18.2
+2025-07-22 14:37:57,313 - INFO - 
+Block-level execution summary:
+2025-07-22 14:37:57,313 - INFO -   Block 0: 0.14ms, 928 params
+2025-07-22 14:37:57,313 - INFO -   Block 1: 0.39ms, 896 params
+2025-07-22 14:37:57,313 - INFO -   Block 2: 1.09ms, 5,136 params
+2025-07-22 14:37:57,313 - INFO -   Block 3: 0.61ms, 8,832 params
+2025-07-22 14:37:57,313 - INFO -   Block 4: 0.41ms, 10,000 params
+2025-07-22 14:37:57,313 - INFO -   Block 5: 0.29ms, 14,848 params
+2025-07-22 14:37:57,313 - INFO -   Block 6: 0.28ms, 14,848 params
+2025-07-22 14:37:57,313 - INFO -   Block 7: 0.26ms, 21,056 params
+2025-07-22 14:37:57,313 - INFO -   Block 8: 0.24ms, 54,272 params
+2025-07-22 14:37:57,313 - INFO -   Block 9: 0.24ms, 54,272 params
+2025-07-22 14:37:57,313 - INFO -   Block 10: 0.24ms, 54,272 params
+2025-07-22 14:37:57,313 - INFO -   Block 11: 0.25ms, 66,624 params
+2025-07-22 14:37:57,313 - INFO -   Block 12: 0.34ms, 118,272 params
+2025-07-22 14:37:57,313 - INFO -   Block 13: 0.34ms, 118,272 params
+2025-07-22 14:37:57,313 - INFO -   Block 14: 0.29ms, 155,264 params
+2025-07-22 14:37:57,313 - INFO -   Block 15: 0.31ms, 320,000 params
+2025-07-22 14:37:57,313 - INFO -   Block 16: 0.31ms, 320,000 params
+2025-07-22 14:37:57,313 - INFO -   Block 17: 0.33ms, 473,920 params
+2025-07-22 14:37:57,313 - INFO -   Block 18: 0.32ms, 412,160 params
+2025-07-22 14:37:57,313 - INFO - Completed enhanced profiling for mobilenetv2: 142 operations profiled
+2025-07-22 14:37:57,314 - INFO - Finding optimal splits for mobilenetv2 with 2 splits using greedy method
+2025-07-22 14:37:57,315 - INFO - Found optimal split with load balance score: 0.1340
+2025-07-22 14:37:57,315 - INFO - Estimated total time: 785.45ms
+2025-07-22 14:37:57,315 - INFO - Communication overhead: 782.81ms
+2025-07-22 14:37:57,315 - INFO - Shard 2: Adding explicit AdaptiveAvgPool2d and Flatten for features→classifier transition
+2025-07-22 14:37:57,315 - INFO - Created 3 shards from split configuration
+Traceback (most recent call last):
+  File "/home/xfu601/Projects/distributed_inference/distributed_runner.py", line 218, in <module>
+    main()
+  File "/home/xfu601/Projects/distributed_inference/distributed_runner.py", line 213, in main
+    run_enhanced_inference(args.rank, args.world_size, args.model, args.batch_size, args.num_classes,
+  File "/home/xfu601/Projects/distributed_inference/distributed_runner.py", line 143, in run_enhanced_inference
+    model = EnhancedDistributedModel(model_type, num_splits, workers, num_classes, metrics_collector,
+  File "/home/xfu601/Projects/distributed_inference/distributed_runner.py", line 90, in __init__
+    shard_configs = self._create_shard_configs()  # Simplified: assume metadata exists
+  File "/home/xfu601/Projects/distributed_inference/distributed_runner.py", line 113, in _create_shard_configs
+    raise FileNotFoundError(f"Metadata not found: {metadata_path}")
+FileNotFoundError: Metadata not found: ./model_shards/split_5/mobilenetv2_shards_metadata.json

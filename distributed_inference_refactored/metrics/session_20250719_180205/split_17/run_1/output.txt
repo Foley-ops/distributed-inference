@@ -1,0 +1,566 @@
+2025-07-19 20:10:45,939 - INFO - Started real-time monitoring for PlamaLV_rank_0
+2025-07-19 20:10:45,939 - INFO - [PlamaLV:rank0] - Starting enhanced distributed inference
+2025-07-19 20:10:45,939 - INFO - [PlamaLV:rank0] - [MASTER] ========================================
+2025-07-19 20:10:45,940 - INFO - [PlamaLV:rank0] - [MASTER] Initializing master node with enhanced features
+2025-07-19 20:10:45,940 - INFO - [PlamaLV:rank0] - [MASTER] Dataset: cifar10, Batch size: 8
+2025-07-19 20:10:45,940 - INFO - [PlamaLV:rank0] - [MASTER] Model: mobilenetv2, Num splits: 1
+2025-07-19 20:10:45,940 - INFO - [PlamaLV:rank0] - [MASTER] World size: 3, Num threads: 4
+2025-07-19 20:10:45,940 - INFO - [PlamaLV:rank0] - [MASTER] ========================================
+2025-07-19 20:10:45,940 - INFO - [PlamaLV:rank0] - [MASTER RPC] Initializing RPC backend on port 44444
+2025-07-19 20:10:45,940 - INFO - [PlamaLV:rank0] - [MASTER RPC] Calling rpc.init_rpc...
+/home/xfu601/Projects/distributed_inference/venv/lib/python3.10/site-packages/torch/cuda/__init__.py:146: UserWarning: 
+NVIDIA GeForce RTX 4090 with CUDA capability sm_89 is not compatible with the current PyTorch installation.
+The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
+If you want to use the NVIDIA GeForce RTX 4090 GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/
+
+  warnings.warn(incompatible_device_warn.format(device_name, capability, " ".join(arch_list), device_name))
+[W DispatchStub.cpp:37] Warning: ignoring invalid value for ATEN_CPU_CAPABILITY:  (function compute_cpu_capability)
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [MASTER RPC] RPC initialization successful
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [MASTER] Defined workers: ['worker1', 'worker2']
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [MASTER] Creating EnhancedDistributedModel...
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] ========== Starting EnhancedDistributedModel initialization ==========
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Model type: mobilenetv2, Num splits: 1
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Workers: ['worker1', 'worker2']
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Split block: 17, Use local loading: True
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Use intelligent splitting: True
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Use pipelining: False
+2025-07-19 20:10:46,795 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Loading model from ./models
+2025-07-19 20:10:46,836 - INFO - [PlamaLV:rank0] - Loaded weights for mobilenetv2 from ./models/mobilenetv2_100epochs_jul15.pth
+2025-07-19 20:10:46,836 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Model loaded successfully: <class 'torchvision.models.mobilenetv2.MobileNetV2'>
+2025-07-19 20:10:46,836 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Starting model profiling for intelligent splitting
+2025-07-19 20:10:46,836 - INFO - [PlamaLV:rank0] - Profiling model: mobilenetv2
+2025-07-19 20:10:46,837 - INFO - [PlamaLV:rank0] - Starting enhanced profiling for model: mobilenetv2
+2025-07-19 20:10:46,878 - INFO - [PlamaLV:rank0] - Profiled layer features.0.0: 0.15ms, 0.49MB
+2025-07-19 20:10:46,879 - INFO - [PlamaLV:rank0] - Profiled layer features.0.1: 0.03ms, 0.00MB
+2025-07-19 20:10:46,880 - INFO - [PlamaLV:rank0] - Profiled layer features.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,882 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.0.0: 0.18ms, 0.00MB
+2025-07-19 20:10:46,884 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.0.1: 0.03ms, 0.00MB
+2025-07-19 20:10:46,884 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,887 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.1: 0.13ms, 0.00MB
+2025-07-19 20:10:46,888 - INFO - [PlamaLV:rank0] - Profiled layer features.1.conv.2: 0.02ms, 0.00MB
+2025-07-19 20:10:46,892 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.0.0: 0.36ms, 0.78MB
+2025-07-19 20:10:46,896 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.0.1: 0.23ms, 1.53MB
+2025-07-19 20:10:46,897 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.0.2: 0.02ms, 0.00MB
+2025-07-19 20:10:46,903 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.1.0: 0.43ms, 0.59MB
+2025-07-19 20:10:46,904 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.1.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,905 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,907 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.2: 0.11ms, 0.00MB
+2025-07-19 20:10:46,908 - INFO - [PlamaLV:rank0] - Profiled layer features.2.conv.3: 0.02ms, 0.00MB
+2025-07-19 20:10:46,911 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.0.0: 0.20ms, 0.39MB
+2025-07-19 20:10:46,912 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.0.1: 0.03ms, 0.00MB
+2025-07-19 20:10:46,913 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,916 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.1.0: 0.12ms, 0.39MB
+2025-07-19 20:10:46,917 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.1.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,918 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,920 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.2: 0.11ms, 0.00MB
+2025-07-19 20:10:46,921 - INFO - [PlamaLV:rank0] - Profiled layer features.3.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,922 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.0.0: 0.10ms, 0.00MB
+2025-07-19 20:10:46,923 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.0.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,924 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,926 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.1.0: 0.07ms, 0.00MB
+2025-07-19 20:10:46,927 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,928 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,929 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.2: 0.05ms, 0.00MB
+2025-07-19 20:10:46,930 - INFO - [PlamaLV:rank0] - Profiled layer features.4.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,932 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.0.0: 0.06ms, 0.00MB
+2025-07-19 20:10:46,933 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.0.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,934 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,935 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.1.0: 0.05ms, 0.00MB
+2025-07-19 20:10:46,936 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.1.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,937 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,938 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.2: 0.06ms, 0.00MB
+2025-07-19 20:10:46,939 - INFO - [PlamaLV:rank0] - Profiled layer features.5.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,941 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.0.0: 0.06ms, 0.00MB
+2025-07-19 20:10:46,942 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.0.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,942 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,944 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.1.0: 0.05ms, 0.00MB
+2025-07-19 20:10:46,945 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,946 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,947 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.2: 0.06ms, 0.00MB
+2025-07-19 20:10:46,948 - INFO - [PlamaLV:rank0] - Profiled layer features.6.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,949 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.0.0: 0.06ms, 0.00MB
+2025-07-19 20:10:46,950 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.0.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,951 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,952 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.1.0: 0.05ms, 0.00MB
+2025-07-19 20:10:46,953 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,954 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,956 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.2: 0.05ms, 0.00MB
+2025-07-19 20:10:46,957 - INFO - [PlamaLV:rank0] - Profiled layer features.7.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,958 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.0.0: 0.06ms, 0.00MB
+2025-07-19 20:10:46,959 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.0.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,960 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,961 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.1.0: 0.04ms, 0.00MB
+2025-07-19 20:10:46,962 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,963 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,964 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.2: 0.06ms, 0.00MB
+2025-07-19 20:10:46,965 - INFO - [PlamaLV:rank0] - Profiled layer features.8.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,967 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.0.0: 0.06ms, 0.00MB
+2025-07-19 20:10:46,968 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.0.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,968 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,970 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.1.0: 0.04ms, 0.00MB
+2025-07-19 20:10:46,971 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,971 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,973 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.2: 0.06ms, 0.00MB
+2025-07-19 20:10:46,974 - INFO - [PlamaLV:rank0] - Profiled layer features.9.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,975 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.0.0: 0.06ms, 0.00MB
+2025-07-19 20:10:46,976 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.0.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,977 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,978 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.1.0: 0.04ms, 0.00MB
+2025-07-19 20:10:46,979 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,980 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,981 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.2: 0.06ms, 0.00MB
+2025-07-19 20:10:46,982 - INFO - [PlamaLV:rank0] - Profiled layer features.10.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,983 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.0.0: 0.06ms, 0.00MB
+2025-07-19 20:10:46,984 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.0.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,985 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,986 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.1.0: 0.04ms, 0.00MB
+2025-07-19 20:10:46,987 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,988 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,990 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.2: 0.07ms, 0.00MB
+2025-07-19 20:10:46,991 - INFO - [PlamaLV:rank0] - Profiled layer features.11.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:46,993 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.0.0: 0.11ms, 0.00MB
+2025-07-19 20:10:46,994 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.0.1: 0.02ms, 0.00MB
+2025-07-19 20:10:46,994 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,996 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.1.0: 0.05ms, 0.00MB
+2025-07-19 20:10:46,997 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:46,998 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:46,999 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.2: 0.08ms, 0.00MB
+2025-07-19 20:10:47,000 - INFO - [PlamaLV:rank0] - Profiled layer features.12.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:47,002 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.0.0: 0.11ms, 0.00MB
+2025-07-19 20:10:47,003 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.0.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,004 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,005 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.1.0: 0.05ms, 0.00MB
+2025-07-19 20:10:47,006 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,007 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,008 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.2: 0.08ms, 0.00MB
+2025-07-19 20:10:47,009 - INFO - [PlamaLV:rank0] - Profiled layer features.13.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:47,011 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.0.0: 0.11ms, 0.00MB
+2025-07-19 20:10:47,012 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.0.1: 0.02ms, 0.00MB
+2025-07-19 20:10:47,013 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,014 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.1.0: 0.05ms, 0.00MB
+2025-07-19 20:10:47,015 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,016 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,017 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.2: 0.06ms, 0.00MB
+2025-07-19 20:10:47,018 - INFO - [PlamaLV:rank0] - Profiled layer features.14.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:47,020 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.0.0: 0.12ms, 0.00MB
+2025-07-19 20:10:47,021 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.0.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,022 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,023 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.1.0: 0.04ms, 0.00MB
+2025-07-19 20:10:47,024 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,025 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,027 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.2: 0.07ms, 0.00MB
+2025-07-19 20:10:47,027 - INFO - [PlamaLV:rank0] - Profiled layer features.15.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:47,029 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.0.0: 0.11ms, 0.00MB
+2025-07-19 20:10:47,030 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.0.1: 0.02ms, 0.00MB
+2025-07-19 20:10:47,031 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,033 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.1.0: 0.04ms, 0.00MB
+2025-07-19 20:10:47,033 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,034 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,036 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.2: 0.07ms, 0.00MB
+2025-07-19 20:10:47,037 - INFO - [PlamaLV:rank0] - Profiled layer features.16.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:47,038 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.0.0: 0.11ms, 0.00MB
+2025-07-19 20:10:47,039 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.0.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,040 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.0.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,041 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.1.0: 0.04ms, 0.00MB
+2025-07-19 20:10:47,042 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.1.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,043 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.1.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,045 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.2: 0.09ms, 0.00MB
+2025-07-19 20:10:47,046 - INFO - [PlamaLV:rank0] - Profiled layer features.17.conv.3: 0.01ms, 0.00MB
+2025-07-19 20:10:47,049 - INFO - [PlamaLV:rank0] - Profiled layer features.18.0: 0.29ms, 0.00MB
+2025-07-19 20:10:47,050 - INFO - [PlamaLV:rank0] - Profiled layer features.18.1: 0.02ms, 0.00MB
+2025-07-19 20:10:47,051 - INFO - [PlamaLV:rank0] - Profiled layer features.18.2: 0.01ms, 0.00MB
+2025-07-19 20:10:47,052 - INFO - [PlamaLV:rank0] - Profiled layer classifier.0: 0.00ms, 0.00MB
+2025-07-19 20:10:47,053 - INFO - [PlamaLV:rank0] - Profiled layer classifier.1: 0.01ms, 0.00MB
+2025-07-19 20:10:47,053 - INFO - [PlamaLV:rank0] - Added functional operation: functional.adaptive_avg_pool2d after features.18.2
+2025-07-19 20:10:47,053 - INFO - [PlamaLV:rank0] - 
+Block-level execution summary:
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 0: 0.19ms, 928 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 1: 0.38ms, 896 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 2: 1.21ms, 5,136 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 3: 0.52ms, 8,832 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 4: 0.30ms, 10,000 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 5: 0.23ms, 14,848 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 6: 0.22ms, 14,848 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 7: 0.20ms, 21,056 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 8: 0.21ms, 54,272 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 9: 0.21ms, 54,272 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 10: 0.21ms, 54,272 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 11: 0.22ms, 66,624 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 12: 0.30ms, 118,272 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 13: 0.29ms, 118,272 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 14: 0.27ms, 155,264 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 15: 0.28ms, 320,000 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 16: 0.29ms, 320,000 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 17: 0.31ms, 473,920 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] -   Block 18: 0.31ms, 412,160 params
+2025-07-19 20:10:47,054 - INFO - [PlamaLV:rank0] - Completed enhanced profiling for mobilenetv2: 142 operations profiled
+2025-07-19 20:10:47,055 - INFO - [PlamaLV:rank0] - Model profile saved to: ./profiles/mobilenetv2_profile.json
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Total model execution time: 6.17ms
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Total model parameters: 2,236,682
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Starting model splitting
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Using block-level splitting (reference implementation style)
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Model has 19 feature blocks
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Using user-specified split block: 17
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Splitting at block 17 (reference style)
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Shard 1: Adding explicit AdaptiveAvgPool2d and Flatten for features→classifier transition
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Created 2 shards from block-level split
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Shard 1 parameters: 1,337,792 (59.8%)
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Shard 2 parameters: 898,890 (40.2%)
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - Split ratio: Shard1=59.8%, Shard2=40.2%
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Model split into 2 shards
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Deploying shards to 2 workers
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Starting shard deployment
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Using local loading mode - creating shard configurations
+2025-07-19 20:10:47,056 - WARNING - [PlamaLV:rank0] - No pre-split metadata found at ./model_shards/split_17/mobilenetv2_shards_metadata.json
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Created 2 shard configurations
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Deploying shard 0 to worker worker1
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Config: shard_id=0, model_type=mobilenetv2, split_block=None
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Successfully deployed shard 0 to worker1 (took 0.000s)
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Deploying shard 1 to worker worker2
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Config: shard_id=1, model_type=mobilenetv2, split_block=None
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Successfully deployed shard 1 to worker2 (took 0.000s)
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Deployment complete - created 2 RRefs
+2025-07-19 20:10:47,056 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Waiting for all workers to finish loading shards...
+2025-07-19 20:10:47,467 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Worker worker1 confirmed shard 0 is loaded
+2025-07-19 20:10:47,471 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] Worker worker2 confirmed shard 1 is loaded
+2025-07-19 20:10:47,471 - INFO - [PlamaLV:rank0] - [DEPLOY SHARDS] All workers have finished loading their shards
+2025-07-19 20:10:47,471 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] Successfully deployed 2 shard RRefs
+2025-07-19 20:10:47,471 - INFO - [PlamaLV:rank0] - [ORCHESTRATOR INIT] ========== EnhancedDistributedModel initialization complete ==========
+2025-07-19 20:10:47,471 - INFO - [PlamaLV:rank0] - [MASTER] Enhanced distributed model created successfully in 0.68s
+2025-07-19 20:10:47,471 - INFO - [PlamaLV:rank0] - [MASTER] Loading dataset cifar10...
+2025-07-19 20:10:47,687 - INFO - [PlamaLV:rank0] - [MASTER] Enabling prefetching with 2 batches
+2025-07-19 20:10:47,687 - INFO - [PlamaLV:rank0] - [MASTER] Dataset loaded in 0.22s: cifar10 (batch_size=8)
+2025-07-19 20:10:47,687 - INFO - [PlamaLV:rank0] - [MASTER] ========== Starting Inference ==========
+2025-07-19 20:10:47,687 - INFO - [PlamaLV:rank0] - [MASTER] Starting inference with 100 test samples
+2025-07-19 20:10:47,687 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Using SEQUENTIAL inference mode
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 1/13 =====
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 0
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 1
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 0
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=0
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:10:47,693 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:10:55,210 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 7516.67ms
+2025-07-19 20:10:55,210 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:10:55,210 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=7516.67ms, Est. network=4.64ms, Est. computation=7512.03ms
+2025-07-19 20:10:55,210 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:10:55,210 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:10:55,210 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 255.52ms
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=255.52ms, Est. network=0.51ms, Est. computation=255.01ms
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 7.773s
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - Completed batch 0: 7773.02ms, 1.03 IPS
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 1 completed: accuracy=100.00%, time=7.773s, throughput=1.03 img/s
+2025-07-19 20:10:55,466 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 2/13 =====
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 8
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 2
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 1
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=1
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:10:55,467 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:10:58,163 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2696.83ms
+2025-07-19 20:10:58,164 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:10:58,164 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2696.83ms, Est. network=4.64ms, Est. computation=2692.18ms
+2025-07-19 20:10:58,164 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:10:58,164 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:10:58,164 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:10:58,395 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 231.79ms
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=231.79ms, Est. network=0.51ms, Est. computation=231.28ms
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.929s
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - Completed batch 1: 2929.27ms, 2.73 IPS
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 2 completed: accuracy=87.50%, time=2.929s, throughput=2.73 img/s
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 3/13 =====
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 16
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 3
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 2
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=2
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:10:58,396 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:01,156 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2760.16ms
+2025-07-19 20:11:01,156 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:01,156 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2760.16ms, Est. network=4.64ms, Est. computation=2755.52ms
+2025-07-19 20:11:01,156 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:01,156 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:01,156 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 270.40ms
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=270.40ms, Est. network=0.51ms, Est. computation=269.89ms
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 3.031s
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - Completed batch 2: 3031.19ms, 2.64 IPS
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 3 completed: accuracy=100.00%, time=3.031s, throughput=2.64 img/s
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 4/13 =====
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 24
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 4
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 3
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=3
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:01,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:04,179 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2751.78ms
+2025-07-19 20:11:04,179 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:04,179 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2751.78ms, Est. network=4.64ms, Est. computation=2747.13ms
+2025-07-19 20:11:04,179 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:04,179 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:04,179 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:04,424 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 244.87ms
+2025-07-19 20:11:04,424 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:04,424 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=244.87ms, Est. network=0.51ms, Est. computation=244.37ms
+2025-07-19 20:11:04,424 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:04,424 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.997s
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - Completed batch 3: 2997.31ms, 2.67 IPS
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 4 completed: accuracy=62.50%, time=2.997s, throughput=2.67 img/s
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 5/13 =====
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 32
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 5
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 4
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=4
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:04,425 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:07,175 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2749.97ms
+2025-07-19 20:11:07,175 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:07,175 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2749.97ms, Est. network=4.64ms, Est. computation=2745.33ms
+2025-07-19 20:11:07,175 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:07,175 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:07,175 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 250.87ms
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=250.87ms, Est. network=0.51ms, Est. computation=250.36ms
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 3.001s
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - Completed batch 4: 3001.62ms, 2.67 IPS
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 5 completed: accuracy=62.50%, time=3.001s, throughput=2.67 img/s
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 6/13 =====
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 40
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 6
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 5
+2025-07-19 20:11:07,426 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:07,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=5
+2025-07-19 20:11:07,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:07,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:07,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:07,427 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:10,159 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2732.64ms
+2025-07-19 20:11:10,159 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:10,159 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2732.64ms, Est. network=4.64ms, Est. computation=2727.99ms
+2025-07-19 20:11:10,159 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:10,159 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:10,159 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:10,408 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 248.89ms
+2025-07-19 20:11:10,408 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:10,408 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=248.89ms, Est. network=0.51ms, Est. computation=248.38ms
+2025-07-19 20:11:10,408 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:10,408 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.982s
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - Completed batch 5: 2982.14ms, 2.68 IPS
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 6 completed: accuracy=75.00%, time=2.982s, throughput=2.68 img/s
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 7/13 =====
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 48
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 7
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 6
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=6
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:10,409 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:13,127 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2718.41ms
+2025-07-19 20:11:13,128 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:13,128 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2718.41ms, Est. network=4.64ms, Est. computation=2713.76ms
+2025-07-19 20:11:13,128 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:13,128 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:13,128 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 261.30ms
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=261.30ms, Est. network=0.51ms, Est. computation=260.80ms
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.980s
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - Completed batch 6: 2980.47ms, 2.68 IPS
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 7 completed: accuracy=100.00%, time=2.980s, throughput=2.68 img/s
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 8/13 =====
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 56
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 8
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 7
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=7
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:13,389 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:13,390 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:13,390 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:16,151 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2761.49ms
+2025-07-19 20:11:16,151 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:16,151 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2761.49ms, Est. network=4.64ms, Est. computation=2756.85ms
+2025-07-19 20:11:16,151 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:16,151 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:16,151 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 253.44ms
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=253.44ms, Est. network=0.51ms, Est. computation=252.94ms
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 3.015s
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - Completed batch 7: 3015.64ms, 2.65 IPS
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 8 completed: accuracy=100.00%, time=3.015s, throughput=2.65 img/s
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 9/13 =====
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 64
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 9
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 8
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=8
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:16,405 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:19,103 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2697.86ms
+2025-07-19 20:11:19,103 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:19,103 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2697.86ms, Est. network=4.64ms, Est. computation=2693.22ms
+2025-07-19 20:11:19,103 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:19,103 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:19,103 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 232.04ms
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=232.04ms, Est. network=0.51ms, Est. computation=231.54ms
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.930s
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - Completed batch 8: 2930.64ms, 2.73 IPS
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 9 completed: accuracy=87.50%, time=2.930s, throughput=2.73 img/s
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 10/13 =====
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 72
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 10
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 9
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=9
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:19,336 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:22,067 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2730.86ms
+2025-07-19 20:11:22,067 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:22,067 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2730.86ms, Est. network=4.64ms, Est. computation=2726.22ms
+2025-07-19 20:11:22,067 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:22,067 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:22,067 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 231.70ms
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=231.70ms, Est. network=0.51ms, Est. computation=231.20ms
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.963s
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - Completed batch 9: 2963.24ms, 2.70 IPS
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 10 completed: accuracy=87.50%, time=2.963s, throughput=2.70 img/s
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 11/13 =====
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 80
+2025-07-19 20:11:22,299 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 11
+2025-07-19 20:11:22,300 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 10
+2025-07-19 20:11:22,300 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:22,300 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=10
+2025-07-19 20:11:22,300 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:22,300 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:22,300 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:22,300 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:25,131 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2831.57ms
+2025-07-19 20:11:25,131 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:25,131 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2831.57ms, Est. network=4.64ms, Est. computation=2826.92ms
+2025-07-19 20:11:25,131 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:25,131 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:25,131 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 225.60ms
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=225.60ms, Est. network=0.51ms, Est. computation=225.10ms
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 3.058s
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - Completed batch 10: 3057.77ms, 2.62 IPS
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 11 completed: accuracy=100.00%, time=3.058s, throughput=2.62 img/s
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 12/13 =====
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 8, Total processed: 88
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 12
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([8, 3, 224, 224]), batch_id: 11
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=11
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([8, 3, 224, 224])
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 3, 224, 224]) to shard 0
+2025-07-19 20:11:25,357 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:28,091 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 2733.57ms
+2025-07-19 20:11:28,091 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([8, 160, 7, 7])
+2025-07-19 20:11:28,091 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=2733.57ms, Est. network=4.64ms, Est. computation=2728.93ms
+2025-07-19 20:11:28,091 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:28,091 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([8, 160, 7, 7]) to shard 1
+2025-07-19 20:11:28,091 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 241.47ms
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([8, 10])
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=241.47ms, Est. network=0.51ms, Est. computation=240.96ms
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([8, 10])
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.975s
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - Completed batch 11: 2975.62ms, 2.69 IPS
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 12 completed: accuracy=62.50%, time=2.975s, throughput=2.69 img/s
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Trimmed batch to 4 images
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] ===== Processing batch 13/13 =====
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch size: 4, Total processed: 96
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Calling model.forward() for batch 13
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Called with input shape: torch.Size([4, 3, 224, 224]), batch_id: 12
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [MODEL FORWARD] Using sequential execution path
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Starting sequential forward pass, batch_id=12
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Input tensor shape: torch.Size([4, 3, 224, 224])
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 0
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([4, 3, 224, 224]) to shard 0
+2025-07-19 20:11:28,333 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 0
+2025-07-19 20:11:30,113 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 0 completed in 1779.70ms
+2025-07-19 20:11:30,113 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 0: torch.Size([4, 160, 7, 7])
+2025-07-19 20:11:30,113 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 0 metrics: RPC total=1779.70ms, Est. network=2.57ms, Est. computation=1777.13ms
+2025-07-19 20:11:30,113 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Processing shard 1
+2025-07-19 20:11:30,113 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sending tensor shape torch.Size([4, 160, 7, 7]) to shard 1
+2025-07-19 20:11:30,113 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Making RPC call to shard 1
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] RPC call to shard 1 completed in 235.51ms
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Received tensor shape from shard 1: torch.Size([4, 10])
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Shard 1 metrics: RPC total=235.51ms, Est. network=0.50ms, Est. computation=235.01ms
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: torch.Size([4, 10])
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Model forward pass completed in 2.016s
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - Completed batch 12: 2015.96ms, 1.98 IPS
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Batch 13 completed: accuracy=100.00%, time=2.016s, throughput=1.98 img/s
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER INFERENCE] Reached target of 100 samples, stopping
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER] ========== Inference Complete ==========
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Total images processed: 100
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Total time: 42.66s
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Final accuracy: 86.00%
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - [MASTER RESULTS] Overall throughput: 2.34 images/sec
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - Actual per-image latency: 426.63ms
+2025-07-19 20:11:30,349 - INFO - [PlamaLV:rank0] - Collecting enhanced metrics from workers...
+2025-07-19 20:11:30,351 - INFO - [PlamaLV:rank0] - Collected enhanced summary from worker1
+2025-07-19 20:11:30,352 - INFO - [PlamaLV:rank0] - Collected enhanced summary from worker2
+2025-07-19 20:11:30,352 - INFO - [PlamaLV:rank0] - === Pipeline Statistics ===
+2025-07-19 20:11:30,353 - INFO - [PlamaLV:rank0] - Stopped prefetch loader
+2025-07-19 20:11:30,353 - INFO - [PlamaLV:rank0] - [CLEANUP] ========== Starting RPC Shutdown ==========
+2025-07-19 20:11:30,353 - INFO - [PlamaLV:rank0] - [CLEANUP] Rank 0 initiating RPC shutdown
+2025-07-19 20:11:30,361 - INFO - [PlamaLV:rank0] - [CLEANUP] RPC shutdown completed successfully in 0.01s
+2025-07-19 20:11:30,662 - INFO - [PlamaLV:rank0] - Stopped real-time monitoring for PlamaLV_rank_0
+2025-07-19 20:11:30,662 - INFO - [PlamaLV:rank0] - === Final Metrics Summary for PlamaLV_rank_0 ===
+2025-07-19 20:11:30,662 - INFO - [PlamaLV:rank0] - Total images processed: 100
+2025-07-19 20:11:30,662 - INFO - [PlamaLV:rank0] - Images per second: 2.34
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - NEW Throughput (inter-batch): 2.65 images/sec
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - Average processing time: 426.54ms
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - Pipeline utilization: 0.00
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - Metrics saved to: ./metrics/session_20250719_180205/split_17/run_1/metrics
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - === Final Enhanced Metrics Summary ===
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - Images per second: 2.34
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - NEW Throughput (inter-batch): 2.65 images/sec
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - Average processing time: 426.54ms
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - Pipeline utilization: 0.00
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] - RPC total time: 1640.19ms
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] -   - Network overhead: 2.49ms
+2025-07-19 20:11:30,663 - INFO - [PlamaLV:rank0] -   - Worker computation: 1637.69ms

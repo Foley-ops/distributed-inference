@@ -1,0 +1,10 @@
+2025-07-21 15:18:07,271 - INFO - Started real-time monitoring for PlamaLV_rank_0
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - Starting enhanced distributed inference
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER] ========================================
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER] Initializing master node with enhanced features
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER] Dataset: cifar10, Batch size: 8
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER] Model: mobilenetv2, Num splits: 1
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER] World size: 3, Num threads: 4
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER] ========================================
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER RPC] Initializing RPC backend on port 29501
+2025-07-21 15:18:07,271 - INFO - [PlamaLV:rank0] - [MASTER RPC] Calling rpc.init_rpc...

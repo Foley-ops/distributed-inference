@@ -1,0 +1,1102 @@
+{
+  "session_id": "20250719_180205",
+  "timestamp": "2025-07-19T20:24:52.266251",
+  "configuration": {
+    "model": "mobilenetv2",
+    "dataset": "cifar10",
+    "batch_size": 8,
+    "num_samples": 100,
+    "pipelining": true,
+    "world_size": 3
+  },
+  "device_mapping": {
+    "rank0": "orchestrator (local)",
+    "rank1": "master-pi",
+    "rank2": "core-pi"
+  },
+  "results": {
+    "6": {
+      "run1": {
+        "throughput": 2.6,
+        "accuracy": 89.0,
+        "total_time": 38.49,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.65,
+        "accuracy": 84.0,
+        "total_time": 37.7,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.6,
+        "accuracy": 91.0,
+        "total_time": 38.39,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.65,
+        "accuracy": 84.0,
+        "total_time": 37.8,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.66,
+        "accuracy": 80.0,
+        "total_time": 37.53,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "7": {
+      "run1": {
+        "throughput": 2.57,
+        "accuracy": 90.0,
+        "total_time": 38.84,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.59,
+        "accuracy": 81.0,
+        "total_time": 38.68,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.64,
+        "accuracy": 91.0,
+        "total_time": 37.84,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.57,
+        "accuracy": 89.0,
+        "total_time": 38.94,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.65,
+        "accuracy": 88.0,
+        "total_time": 37.78,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "0": {
+      "run1": {
+        "throughput": 2.66,
+        "accuracy": 82.0,
+        "total_time": 37.54,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.68,
+        "accuracy": 91.0,
+        "total_time": 37.29,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.67,
+        "accuracy": 83.0,
+        "total_time": 37.46,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.67,
+        "accuracy": 79.0,
+        "total_time": 37.39,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.67,
+        "accuracy": 88.0,
+        "total_time": 37.41,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "4": {
+      "run1": {
+        "throughput": 2.66,
+        "accuracy": 81.0,
+        "total_time": 37.65,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.65,
+        "accuracy": 84.0,
+        "total_time": 37.73,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.65,
+        "accuracy": 83.0,
+        "total_time": 37.79,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.64,
+        "accuracy": 80.0,
+        "total_time": 37.9,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.63,
+        "accuracy": 89.0,
+        "total_time": 37.96,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "16": {
+      "run1": {
+        "throughput": 2.65,
+        "accuracy": 88.0,
+        "total_time": 37.67,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.64,
+        "accuracy": 89.0,
+        "total_time": 37.81,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.68,
+        "accuracy": 84.0,
+        "total_time": 37.37,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.41,
+        "accuracy": 85.0,
+        "total_time": 41.52,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.39,
+        "accuracy": 89.0,
+        "total_time": 41.9,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "1": {
+      "run1": {
+        "throughput": 2.53,
+        "accuracy": 85.0,
+        "total_time": 39.5,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.54,
+        "accuracy": 79.0,
+        "total_time": 39.36,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.54,
+        "accuracy": 85.0,
+        "total_time": 39.33,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.55,
+        "accuracy": 86.0,
+        "total_time": 39.16,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.58,
+        "accuracy": 90.0,
+        "total_time": 38.71,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "8": {
+      "run1": {
+        "throughput": 2.54,
+        "accuracy": 85.0,
+        "total_time": 39.35,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.63,
+        "accuracy": 85.0,
+        "total_time": 38.06,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.63,
+        "accuracy": 84.0,
+        "total_time": 38.05,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.56,
+        "accuracy": 79.0,
+        "total_time": 39.09,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.66,
+        "accuracy": 82.0,
+        "total_time": 37.65,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "13": {
+      "run1": {
+        "throughput": 2.65,
+        "accuracy": 81.0,
+        "total_time": 37.71,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.43,
+        "accuracy": 81.0,
+        "total_time": 41.14,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.47,
+        "accuracy": 86.0,
+        "total_time": 40.46,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.48,
+        "accuracy": 83.0,
+        "total_time": 40.29,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.65,
+        "accuracy": 88.0,
+        "total_time": 37.7,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "5": {
+      "run1": {
+        "throughput": 2.6,
+        "accuracy": 88.0,
+        "total_time": 38.5,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.6,
+        "accuracy": 88.0,
+        "total_time": 38.39,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.58,
+        "accuracy": 74.0,
+        "total_time": 38.69,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.63,
+        "accuracy": 83.0,
+        "total_time": 37.97,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.62,
+        "accuracy": 84.0,
+        "total_time": 38.2,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "9": {
+      "run1": {
+        "throughput": 2.62,
+        "accuracy": 86.0,
+        "total_time": 38.16,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.52,
+        "accuracy": 83.0,
+        "total_time": 39.74,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.64,
+        "accuracy": 89.0,
+        "total_time": 37.95,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.65,
+        "accuracy": 85.0,
+        "total_time": 37.73,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.61,
+        "accuracy": 82.0,
+        "total_time": 38.32,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "12": {
+      "run1": {
+        "throughput": 2.64,
+        "accuracy": 84.0,
+        "total_time": 37.91,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.49,
+        "accuracy": 81.0,
+        "total_time": 40.22,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.64,
+        "accuracy": 87.0,
+        "total_time": 37.88,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.48,
+        "accuracy": 79.0,
+        "total_time": 40.27,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.62,
+        "accuracy": 82.0,
+        "total_time": 38.18,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "18": {
+      "run1": {
+        "throughput": 2.66,
+        "accuracy": 85.0,
+        "total_time": 37.56,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.66,
+        "accuracy": 85.0,
+        "total_time": 37.63,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.67,
+        "accuracy": 87.0,
+        "total_time": 37.45,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.32,
+        "accuracy": 81.0,
+        "total_time": 43.05,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.66,
+        "accuracy": 85.0,
+        "total_time": 37.6,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "14": {
+      "run1": {
+        "throughput": 2.44,
+        "accuracy": 91.0,
+        "total_time": 40.93,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.44,
+        "accuracy": 84.0,
+        "total_time": 41.02,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.64,
+        "accuracy": 89.0,
+        "total_time": 37.87,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.64,
+        "accuracy": 93.0,
+        "total_time": 37.85,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.66,
+        "accuracy": 86.0,
+        "total_time": 37.64,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "2": {
+      "run1": {
+        "throughput": 2.59,
+        "accuracy": 88.0,
+        "total_time": 38.59,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.59,
+        "accuracy": 86.0,
+        "total_time": 38.63,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.6,
+        "accuracy": 88.0,
+        "total_time": 38.53,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.62,
+        "accuracy": 87.0,
+        "total_time": 38.11,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.59,
+        "accuracy": 85.0,
+        "total_time": 38.59,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "15": {
+      "run1": {
+        "throughput": 2.68,
+        "accuracy": 87.0,
+        "total_time": 37.37,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.44,
+        "accuracy": 90.0,
+        "total_time": 41.02,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.46,
+        "accuracy": 83.0,
+        "total_time": 40.65,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.63,
+        "accuracy": 81.0,
+        "total_time": 38.06,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.44,
+        "accuracy": 86.0,
+        "total_time": 41.01,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "10": {
+      "run1": {
+        "throughput": 2.63,
+        "accuracy": 82.0,
+        "total_time": 37.96,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.62,
+        "accuracy": 87.0,
+        "total_time": 38.17,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.63,
+        "accuracy": 87.0,
+        "total_time": 38.01,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.62,
+        "accuracy": 88.0,
+        "total_time": 38.23,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.65,
+        "accuracy": 84.0,
+        "total_time": 37.78,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "17": {
+      "run1": {
+        "throughput": 2.34,
+        "accuracy": 86.0,
+        "total_time": 42.66,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.35,
+        "accuracy": 86.0,
+        "total_time": 42.58,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.62,
+        "accuracy": 88.0,
+        "total_time": 38.11,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.64,
+        "accuracy": 86.0,
+        "total_time": 37.88,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.67,
+        "accuracy": 91.0,
+        "total_time": 37.5,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "11": {
+      "run1": {
+        "throughput": 2.51,
+        "accuracy": 86.0,
+        "total_time": 39.89,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.64,
+        "accuracy": 89.0,
+        "total_time": 37.88,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.66,
+        "accuracy": 90.0,
+        "total_time": 37.58,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.66,
+        "accuracy": 87.0,
+        "total_time": 37.52,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.62,
+        "accuracy": 84.0,
+        "total_time": 38.11,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "3": {
+      "run1": {
+        "throughput": 2.65,
+        "accuracy": 84.0,
+        "total_time": 37.78,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": 2.35,
+        "accuracy": 83.0,
+        "total_time": 42.51,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": 2.63,
+        "accuracy": 89.0,
+        "total_time": 38.04,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": 2.68,
+        "accuracy": 76.0,
+        "total_time": 37.28,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": 2.66,
+        "accuracy": 80.0,
+        "total_time": 37.53,
+        "images_processed": 100,
+        "avg_processing_time": null,
+        "pipeline_utilization": null,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    }
+  }
+}

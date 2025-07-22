@@ -1,0 +1,1102 @@
+{
+  "session_id": "20250718_180026",
+  "timestamp": "2025-07-18T19:15:00.390019",
+  "configuration": {
+    "model": "mobilenetv2",
+    "dataset": "cifar10",
+    "batch_size": 8,
+    "num_samples": 100,
+    "pipelining": true,
+    "world_size": 3
+  },
+  "device_mapping": {
+    "rank0": "orchestrator (local)",
+    "rank1": "master-pi",
+    "rank2": "core-pi"
+  },
+  "results": {
+    "6": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "7": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "0": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "4": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "16": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "1": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "8": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "13": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "5": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "9": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "12": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "18": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "14": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "2": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "15": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "10": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "17": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "11": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    },
+    "3": {
+      "run1": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run3": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run4": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run5": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      },
+      "run2": {
+        "throughput": null,
+        "accuracy": null,
+        "total_time": null,
+        "images_processed": 0,
+        "avg_processing_time": 0.0,
+        "pipeline_utilization": 0.0,
+        "device_info": {
+          "rank0": "PlamaLV"
+        }
+      }
+    }
+  }
+}
