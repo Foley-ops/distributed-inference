@@ -1236,7 +1236,9 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
         logger.info(f"[CLEANUP] Rank {rank} initiating RPC shutdown")
         try:
             shutdown_start = time.time()
-            rpc.shutdown()
+            # For PyTorch RPC, we need to specify graceful=False to avoid hanging
+            # when workers are still in their wait loops
+            rpc.shutdown(graceful=False)
             shutdown_time = time.time() - shutdown_start
             logger.info(f"[CLEANUP] RPC shutdown completed successfully in {shutdown_time:.2f}s")
         except Exception as e:

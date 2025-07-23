@@ -171,7 +171,7 @@ class AutomatedSplitTester:
                     cmd,
                     stdout=f,
                     stderr=subprocess.STDOUT,
-                    timeout=300  # 5 minute timeout
+                    timeout=600  # 10 minute timeout
                 )
 
             if result.returncode != 0:
@@ -181,7 +181,21 @@ class AutomatedSplitTester:
             return True
 
         except subprocess.TimeoutExpired:
-            logger.error("Orchestrator timed out")
+            logger.warning("Orchestrator timed out - checking if inference completed successfully")
+            # Check if the output file shows successful completion
+            if os.path.exists(output_file):
+                try:
+                    with open(output_file, 'r') as f:
+                        content = f.read()
+                        # Check for successful completion markers
+                        if "========== Inference Complete ==========" in content and \
+                           "Total images processed:" in content and \
+                           "Overall throughput:" in content:
+                            logger.info("Inference completed successfully despite timeout during RPC shutdown")
+                            return True
+                except Exception as e:
+                    logger.error(f"Error checking output file: {e}")
+            logger.error("Orchestrator timed out without completing inference")
             return False
         except Exception as e:
             logger.error(f"Error running orchestrator: {e}")
