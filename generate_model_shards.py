@@ -30,16 +30,8 @@ def generate_shards_for_model(model_type: str, splits_to_test: list = None):
     
     # Determine which splits to generate
     if splits_to_test is None:
-        # For models with many splits, use strategic subset
-        if model_type == 'vgg16':
-            # For VGG16 with 30 splits, test strategic points
-            splits_to_test = [0, 5, 10, 15, 20, 25, 30]
-        elif max_splits > 20:
-            # For other large models, test every 3rd split
-            splits_to_test = list(range(0, max_splits + 1, 3))
-        else:
-            # For smaller models, test all splits
-            splits_to_test = list(range(max_splits + 1))
+        # Generate ALL splits for every model
+        splits_to_test = list(range(max_splits + 1))
     
     logger.info(f"\n{'='*60}")
     logger.info(f"Generating shards for {model_type.upper()}")
@@ -48,8 +40,8 @@ def generate_shards_for_model(model_type: str, splits_to_test: list = None):
     logger.info(f"Splits to generate: {splits_to_test}")
     logger.info(f"{'='*60}")
     
-    # Create a subdirectory for this model
-    base_shard_dir = f"./model_shards/{model_type}"
+    # Use the base model_shards directory
+    base_shard_dir = "./model_shards"
     os.makedirs(base_shard_dir, exist_ok=True)
     
     successful_splits = []
@@ -62,7 +54,7 @@ def generate_shards_for_model(model_type: str, splits_to_test: list = None):
         
         try:
             # Create directory for this split configuration
-            split_dir = os.path.join(base_shard_dir, f"splits_{num_splits}")
+            split_dir = os.path.join(base_shard_dir, f"split_{num_splits}")
             os.makedirs(split_dir, exist_ok=True)
             
             # Prepare arguments for prepare_shards
@@ -142,14 +134,11 @@ def generate_all_model_shards(models: list = None):
     total_size = 0
     shard_base = "./model_shards"
     if os.path.exists(shard_base):
-        for model in models:
-            model_dir = os.path.join(shard_base, model)
-            if os.path.exists(model_dir):
-                for root, dirs, files in os.walk(model_dir):
-                    for file in files:
-                        if file.endswith('.pth'):
-                            file_path = os.path.join(root, file)
-                            total_size += os.path.getsize(file_path)
+        for root, dirs, files in os.walk(shard_base):
+            for file in files:
+                if file.endswith('.pth'):
+                    file_path = os.path.join(root, file)
+                    total_size += os.path.getsize(file_path)
     
     logger.info(f"\nTotal disk space used: {total_size / (1024**2):.2f} MB")
     
@@ -167,15 +156,11 @@ echo "Creating shard directories on Pi nodes..."
 ssh cc@master-pi "mkdir -p ~/projects/distributed-inference/model_shards"
 ssh cc@core-pi "mkdir -p ~/projects/distributed-inference/model_shards"
 
-"""
-    
-    for model in models:
-        script_content += f"""
-echo "Copying {model} shards to master-pi..."
-scp -r model_shards/{model} cc@master-pi:~/projects/distributed-inference/model_shards/
+echo "Copying all shard files to master-pi..."
+scp -r model_shards/* cc@master-pi:~/projects/distributed-inference/model_shards/
 
-echo "Copying {model} shards to core-pi..."
-scp -r model_shards/{model} cc@core-pi:~/projects/distributed-inference/model_shards/
+echo "Copying all shard files to core-pi..."
+scp -r model_shards/* cc@core-pi:~/projects/distributed-inference/model_shards/
 """
     
     script_content += """

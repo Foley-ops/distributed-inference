@@ -138,28 +138,13 @@ def get_default_split_ranges(model_type: str) -> List[int]:
     """
     Get default split indices to test for a model type.
     
-    For models with many split points, return a reasonable subset.
+    Returns ALL possible split points for every model.
     """
     info = get_model_split_info(model_type)
     max_splits = info['max_splits']
     
-    if max_splits <= 10:
-        # Test all split points for small models
-        return list(range(max_splits + 1))  # 0 to max_splits inclusive
-    
-    elif max_splits <= 20:
-        # Test every other split point
-        return list(range(0, max_splits + 1, 2))
-    
-    else:
-        # For large models (VGG), test strategic points
-        # Test: 0, 25%, 50%, 75%, max
-        quarter = max_splits // 4
-        half = max_splits // 2
-        three_quarter = 3 * max_splits // 4
-        
-        test_points = [0, quarter, half, three_quarter, max_splits]
-        return sorted(list(set(test_points)))  # Remove duplicates and sort
+    # Return ALL split points from 0 to max_splits
+    return list(range(max_splits + 1))  # 0 to max_splits inclusive
 
 
 if __name__ == "__main__":
