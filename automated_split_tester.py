@@ -301,7 +301,7 @@ class AutomatedSplitTester:
         session_dir = f"./metrics/session_{timestamp}"
         os.makedirs(session_dir, exist_ok=True)
         logger.info(f"Created session directory: {session_dir}")
-        
+
         # Log model information
         model_info = get_model_split_info(model)
         logger.info(f"Testing model: {model.upper()}")
@@ -390,7 +390,7 @@ class AutomatedSplitTester:
                             break
             except:
                 pass
-        
+
         if not model_name:
             model_name = 'Unknown'
 
