@@ -107,7 +107,7 @@ def generate_all_model_shards(models: list = None):
     
     if models is None:
         # Default to all supported models
-        models = ['mobilenetv2', 'resnet18', 'vgg16', 'alexnet', 'inceptionv3', 'squeezenet']
+        models = ['mobilenetv2', 'resnet18', 'resnet50', 'vgg16', 'alexnet', 'inceptionv3']
     
     start_time = time.time()
     

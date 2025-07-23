@@ -36,10 +36,10 @@ scp -r model_shards/inceptionv3 cc@master-pi:~/projects/distributed-inference/mo
 echo "Copying inceptionv3 shards to core-pi..."
 scp -r model_shards/inceptionv3 cc@core-pi:~/projects/distributed-inference/model_shards/
 
-echo "Copying squeezenet shards to master-pi..."
-scp -r model_shards/squeezenet cc@master-pi:~/projects/distributed-inference/model_shards/
+echo "Copying resnet50 shards to master-pi..."
+scp -r model_shards/resnet50 cc@master-pi:~/projects/distributed-inference/model_shards/
 
-echo "Copying squeezenet shards to core-pi..."
-scp -r model_shards/squeezenet cc@core-pi:~/projects/distributed-inference/model_shards/
+echo "Copying resnet50 shards to core-pi..."
+scp -r model_shards/resnet50 cc@core-pi:~/projects/distributed-inference/model_shards/
 
 echo "Done! All shard files copied to Pi nodes."

@@ -40,9 +40,9 @@ class ModelLoader:
             "weight_file": "resnet18_cifar10.pth",
             "input_size": (224, 224)
         },
-        "squeezenet": {
-            "model_class": torchvision_models.squeezenet1_1,
-            "weight_file": "squeezenet_cifar10.pth",
+        "resnet50": {
+            "model_class": torchvision_models.resnet50,
+            "weight_file": "resnet50_100epochs_jul17.pth",
             "input_size": (224, 224)
         },
         "vgg16": {
@@ -114,9 +114,8 @@ class ModelLoader:
         elif model_type == "resnet18":
             model.fc = nn.Linear(model.fc.in_features, num_classes)
         
-        elif model_type == "squeezenet":
-            model.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1))
-            model.num_classes = num_classes
+        elif model_type == "resnet50":
+            model.fc = nn.Linear(model.fc.in_features, num_classes)
         
         elif model_type == "vgg16":
             model.classifier[6] = nn.Linear(model.classifier[6].in_features, num_classes)

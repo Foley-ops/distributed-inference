@@ -50,11 +50,6 @@ def get_model_split_info(model_type: str) -> Dict[str, any]:
             'split_type': 'blocks',
             'description': 'Inception blocks'
         },
-        'squeezenet': {
-            'max_splits': 7,  # 8 Fire modules = 7 split points
-            'split_type': 'modules',
-            'description': 'Fire modules'
-        }
     }
     
     if model_type not in split_info:
@@ -114,17 +109,26 @@ def get_split_points(model: nn.Module, model_type: str) -> List[int]:
                          if not name.startswith('_')])
         return list(range(1, min(num_blocks, 20)))  # Up to 19 split points
         
-    elif model_type == 'squeezenet':
-        # Split between Fire modules
-        fire_indices = []
-        for i, (name, module) in enumerate(model.features.named_children()):
-            if 'fire' in name.lower() or 'Fire' in type(module).__name__:
-                fire_indices.append(i)
+    elif model_type == 'resnet50':
+        # Split after each Bottleneck block
+        split_points = []
+        idx = 0
+        # Initial layers before blocks
+        for name in ['conv1', 'bn1', 'relu', 'maxpool']:
+            if hasattr(model, name):
+                idx += 1
+                split_points.append(idx)
         
-        # Return split points between Fire modules
-        if len(fire_indices) > 1:
-            return fire_indices[1:]  # Can split after each Fire module except the first
-        return list(range(1, 8))  # Default to 7 split points
+        # Add split points after each block in layers
+        for layer_name in ['layer1', 'layer2', 'layer3', 'layer4']:
+            if hasattr(model, layer_name):
+                layer = getattr(model, layer_name)
+                num_blocks = len(list(layer.children()))
+                for _ in range(num_blocks):
+                    idx += 1
+                    split_points.append(idx)
+        
+        return split_points[:16]  # Return first 16 split points
         
     else:
         raise ValueError(f"Unknown model type: {model_type}")
@@ -163,7 +167,7 @@ if __name__ == "__main__":
     print("Model Split Information:")
     print("-" * 60)
     
-    for model_type in ['mobilenetv2', 'resnet18', 'vgg16', 'alexnet', 'inceptionv3', 'squeezenet']:
+    for model_type in ['mobilenetv2', 'resnet18', 'resnet50', 'vgg16', 'alexnet', 'inceptionv3']:
         try:
             info = get_model_split_info(model_type)
             default_ranges = get_default_split_ranges(model_type)

@@ -384,7 +384,7 @@ class AutomatedSplitTester:
             try:
                 with open(output_file, 'r') as f:
                     content = f.read(1000)  # Read first 1000 chars
-                    for model in ['mobilenetv2', 'resnet18', 'vgg16', 'alexnet', 'inceptionv3', 'squeezenet']:
+                    for model in ['mobilenetv2', 'resnet18', 'resnet50', 'vgg16', 'alexnet', 'inceptionv3']:
                         if model in content.lower():
                             model_name = model.upper()
                             break
@@ -652,7 +652,7 @@ def main():
     parser.add_argument("--no-optimizations", action="store_true",
                        help="Disable optimization features (local loading, caching, prefetching)")
     parser.add_argument("--model", type=str, default="mobilenetv2",
-                       help="Model to test (default: mobilenetv2). Options: mobilenetv2, resnet18, vgg16, alexnet, inceptionv3, squeezenet")
+                       help="Model to test (default: mobilenetv2). Options: mobilenetv2, resnet18, resnet50, vgg16, alexnet, inceptionv3")
 
     args = parser.parse_args()
 
