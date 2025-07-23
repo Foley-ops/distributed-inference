@@ -18,6 +18,10 @@ import json
 import re
 import glob as glob_module
 
+# Add utils to path for model_split_info
+sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
+from model_split_info import get_model_split_info, get_default_split_ranges
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -203,7 +207,8 @@ class AutomatedSplitTester:
 
     def test_single_split(self, split_block: int, run_number: int,
                          wait_time: int = 60, use_pipelining: bool = True,
-                         session_dir: str = None, use_optimizations: bool = True) -> Dict[str, str]:
+                         session_dir: str = None, use_optimizations: bool = True,
+                         model: str = "mobilenetv2") -> Dict[str, str]:
         """Test a single split configuration."""
         logger.info(f"\n{'='*60}")
         logger.info(f"Testing split block {split_block}, run {run_number} {'(PIPELINED)' if use_pipelining else '(sequential)'}")
@@ -227,12 +232,12 @@ class AutomatedSplitTester:
         self.kill_existing_processes()
 
         # Start workers
-        self.start_worker(1, split_block=split_block)
+        self.start_worker(1, split_block=split_block, model=model)
         logger.info("Worker 1 start command sent")
 
         time.sleep(3)
 
-        self.start_worker(2, split_block=split_block)
+        self.start_worker(2, split_block=split_block, model=model)
         logger.info("Worker 2 start command sent")
 
         # Wait for workers to be ready
@@ -265,7 +270,8 @@ class AutomatedSplitTester:
         success = self.run_orchestrator(split_block, output_file=output_file,
                                        use_pipelining=use_pipelining,
                                        metrics_dir=metrics_dir,
-                                       use_optimizations=True)
+                                       use_optimizations=True,
+                                       model=model)
 
         end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -282,18 +288,26 @@ class AutomatedSplitTester:
                        runs_per_split: int = 3,
                        worker_wait_time: int = 60,
                        use_pipelining: bool = True,
-                       use_optimizations: bool = True):
+                       use_optimizations: bool = True,
+                       model: str = "mobilenetv2"):
         """Test all split blocks with multiple runs each."""
 
         if split_blocks is None:
-            # Test all 19 possible splits (0-18)
-            split_blocks = list(range(19))
+            # Get default split ranges for the model
+            split_blocks = get_default_split_ranges(model)
 
         # Create session directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         session_dir = f"./metrics/session_{timestamp}"
         os.makedirs(session_dir, exist_ok=True)
         logger.info(f"Created session directory: {session_dir}")
+        
+        # Log model information
+        model_info = get_model_split_info(model)
+        logger.info(f"Testing model: {model.upper()}")
+        logger.info(f"Max split points: {model_info['max_splits']}")
+        logger.info(f"Split type: {model_info['split_type']} ({model_info['description']})")
+        logger.info(f"Testing splits: {split_blocks}")
 
         # Store session_dir as instance variable for use in other methods
         self.session_dir = session_dir
@@ -320,7 +334,8 @@ class AutomatedSplitTester:
                         split_block, run, wait_time=worker_wait_time,
                         use_pipelining=use_pipelining,
                         session_dir=session_dir,
-                        use_optimizations=use_optimizations
+                        use_optimizations=use_optimizations,
+                        model=model
                     )
 
                     # Save result to CSV
@@ -351,7 +366,7 @@ class AutomatedSplitTester:
         self.display_summary(results_file)
 
         # Consolidate metrics into single JSON
-        metrics_file = self.consolidate_metrics(timestamp, session_dir)
+        metrics_file = self.consolidate_metrics(timestamp, session_dir, model)
 
         # Note: With new directory structure, individual files are already organized
         # No cleanup needed as files are in session directory
@@ -359,13 +374,28 @@ class AutomatedSplitTester:
             logger.info("Note: Individual output files are now organized in session directory")
             logger.info(f"All files preserved in: {session_dir}")
 
-    def parse_output_file(self, output_file: str) -> Optional[Dict]:
+    def parse_output_file(self, output_file: str, model_name: str = None) -> Optional[Dict]:
         """Parse an output file to extract key metrics."""
         if not os.path.exists(output_file):
             return None
 
+        # Try to detect model from output file if not provided
+        if not model_name:
+            try:
+                with open(output_file, 'r') as f:
+                    content = f.read(1000)  # Read first 1000 chars
+                    for model in ['mobilenetv2', 'resnet18', 'vgg16', 'alexnet', 'inceptionv3', 'squeezenet']:
+                        if model in content.lower():
+                            model_name = model.upper()
+                            break
+            except:
+                pass
+        
+        if not model_name:
+            model_name = 'Unknown'
+
         metrics = {
-            'model_name': 'MobileNetV2',
+            'model_name': model_name,
             'split_index': None,
             'static_network_delay_ms': 0.094,  # Static for now, could be calculated
             'system_inference_throughput_imgs_per_s': None,
@@ -470,8 +500,9 @@ class AutomatedSplitTester:
 
             # Set default values if not found
             if metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] is None:
-                # Default intermediate size for MobileNetV2 based on typical layer outputs
-                metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = 8 * 32 * 56 * 56 * 4  # Typical early layer output
+                # Default intermediate size based on typical layer outputs
+                # This is just an estimate - actual size depends on model and split point
+                metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = 8 * 32 * 56 * 56 * 4
 
             return metrics
 
@@ -479,13 +510,13 @@ class AutomatedSplitTester:
             logger.error(f"Error parsing {output_file}: {e}")
             return None
 
-    def consolidate_metrics(self, test_session_id: str, session_dir: str = None):
+    def consolidate_metrics(self, test_session_id: str, session_dir: str = None, model: str = "mobilenetv2"):
         """Consolidate all metrics from output files into a single JSON."""
         consolidated = {
             'session_id': test_session_id,
             'timestamp': datetime.now().isoformat(),
             'configuration': {
-                'model': 'mobilenetv2',
+                'model': model,
                 'dataset': 'cifar10',
                 'batch_size': 8,
                 'num_samples': 100,
@@ -519,7 +550,7 @@ class AutomatedSplitTester:
 
                             if os.path.exists(output_file):
                                 # Parse metrics from file
-                                metrics = self.parse_output_file(output_file)
+                                metrics = self.parse_output_file(output_file, model)
                                 if metrics:
                                     # Set the split index
                                     metrics['split_index'] = split
@@ -620,6 +651,8 @@ def main():
                        help="Clean up individual output files after consolidation")
     parser.add_argument("--no-optimizations", action="store_true",
                        help="Disable optimization features (local loading, caching, prefetching)")
+    parser.add_argument("--model", type=str, default="mobilenetv2",
+                       help="Model to test (default: mobilenetv2). Options: mobilenetv2, resnet18, vgg16, alexnet, inceptionv3, squeezenet")
 
     args = parser.parse_args()
 
@@ -635,8 +668,9 @@ def main():
     tester = AutomatedSplitTester()
     tester.cleanup_files = args.cleanup  # Set cleanup flag
 
-    split_blocks = args.splits if args.splits else list(range(19))
-    logger.info(f"Testing splits: {split_blocks}")
+    split_blocks = args.splits if args.splits else None  # Will use model defaults
+    logger.info(f"Model: {args.model}")
+    logger.info(f"Testing splits: {split_blocks if split_blocks else 'model defaults'}")
     logger.info(f"Runs per split: {args.runs}")
     logger.info(f"Worker wait time: {args.wait_time} seconds")
     logger.info(f"Cleanup after consolidation: {args.cleanup}")
@@ -645,8 +679,9 @@ def main():
         split_blocks=split_blocks,
         runs_per_split=args.runs,
         worker_wait_time=args.wait_time,
-        use_pipelining=False,  # Always use pipelining by default, but can be changed
-        use_optimizations=not args.no_optimizations
+        use_pipelining=True,  # Always use pipelining by default
+        use_optimizations=not args.no_optimizations,
+        model=args.model
     )
 
 if __name__ == "__main__":
