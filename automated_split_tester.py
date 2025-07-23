@@ -38,8 +38,8 @@ class AutomatedSplitTester:
         self.venv_activate = "source venv/bin/activate"
         # Don't override environment variables - they're already set in .env files
         logger.info("Using environment variables from .env files")
-        # Use hardcoded shards directory
-        self.shards_dir = os.path.expanduser('~/datasets/model_shards')
+        # Use hardcoded shards directory (don't expand ~ here, let each machine do it)
+        self.shards_dir = '~/datasets/model_shards'
         logger.info(f"Using shards directory: {self.shards_dir}")
 
     def kill_existing_processes(self):

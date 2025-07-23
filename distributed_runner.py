@@ -137,6 +137,8 @@ class LocalLoadingShardWrapper(nn.Module):
         
         # Check if we have pre-split weights
         shards_dir = config.get('shards_dir', './model_shards')
+        # Expand the path locally on this machine
+        shards_dir = os.path.expanduser(shards_dir)
         model_type = config['model_type']
         shard_id = config['shard_id']
         
@@ -535,13 +537,16 @@ class EnhancedDistributedModel(nn.Module):
         """Create configuration for each shard for local loading."""
         shard_configs = []
         
+        # Expand shards_dir locally on the orchestrator
+        expanded_shards_dir = os.path.expanduser(self.shards_dir)
+        
         # First check if we have split-specific metadata
         if self.split_block is not None:
-            split_dir = os.path.join(self.shards_dir, f"split_{self.split_block}")
+            split_dir = os.path.join(expanded_shards_dir, f"split_{self.split_block}")
             metadata_path = os.path.join(split_dir, f"{self.model_type}_shards_metadata.json")
         else:
             # Check if we have pre-split metadata in root
-            metadata_path = os.path.join(self.shards_dir, f"{self.model_type}_shards_metadata.json")
+            metadata_path = os.path.join(expanded_shards_dir, f"{self.model_type}_shards_metadata.json")
         
         if os.path.exists(metadata_path):
             # Load metadata for pre-split weights
