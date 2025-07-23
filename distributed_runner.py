@@ -1298,7 +1298,8 @@ def main():
     # New optimization features
     parser.add_argument("--use-local-loading", action="store_true", default=True,
                        help="Load model weights locally on workers from pre-split files")
-    parser.add_argument("--shards-dir", type=str, default="./model_shards",
+    parser.add_argument("--shards-dir", type=str, 
+                       default=os.path.expanduser('~/datasets/model_shards'),
                        help="Directory containing pre-split model shards")
     parser.add_argument("--enable-prefetch", action="store_true", default=False,
                        help="Enable data prefetching for improved throughput")

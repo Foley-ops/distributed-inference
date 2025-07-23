@@ -40,8 +40,8 @@ def generate_shards_for_model(model_type: str, splits_to_test: list = None):
     logger.info(f"Splits to generate: {splits_to_test}")
     logger.info(f"{'='*60}")
     
-    # Use the base model_shards directory
-    base_shard_dir = "./model_shards"
+    # Use the hardcoded shards directory
+    base_shard_dir = os.path.expanduser("~/datasets/model_shards")
     os.makedirs(base_shard_dir, exist_ok=True)
     
     successful_splits = []
@@ -130,7 +130,7 @@ def generate_all_model_shards(models: list = None):
     
     # Calculate total disk space
     total_size = 0
-    shard_base = "./model_shards"
+    shard_base = os.path.expanduser("~/datasets/model_shards")
     if os.path.exists(shard_base):
         for root, dirs, files in os.walk(shard_base):
             for file in files:
