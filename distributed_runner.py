@@ -324,10 +324,19 @@ class PrefetchDataLoader:
             for batch_data in self.dataloader:
                 if self.stop_event.is_set():
                     break
-                self.prefetch_queue.put(batch_data)
+                # Use timeout to prevent hanging if queue is full and no one is consuming
+                while not self.stop_event.is_set():
+                    try:
+                        self.prefetch_queue.put(batch_data, timeout=1.0)
+                        break
+                    except queue.Full:
+                        continue
         except Exception as e:
             logging.error(f"Prefetch worker error: {e}")
-            self.prefetch_queue.put(None)  # Signal error
+            try:
+                self.prefetch_queue.put(None, timeout=1.0)  # Signal error
+            except queue.Full:
+                pass
     
     def __iter__(self):
         """Start prefetching and return iterator."""
@@ -349,8 +358,18 @@ class PrefetchDataLoader:
     def stop(self):
         """Stop prefetching."""
         self.stop_event.set()
-        if self.prefetch_thread:
-            self.prefetch_thread.join()
+        
+        # Clear the queue to unblock the worker thread if it's waiting to put
+        try:
+            while not self.prefetch_queue.empty():
+                self.prefetch_queue.get_nowait()
+        except queue.Empty:
+            pass
+        
+        if self.prefetch_thread and self.prefetch_thread.is_alive():
+            self.prefetch_thread.join(timeout=5.0)
+            if self.prefetch_thread.is_alive():
+                logging.warning("Prefetch thread did not terminate cleanly")
 
 
 class EnhancedDistributedModel(nn.Module):
