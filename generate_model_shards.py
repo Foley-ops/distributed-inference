@@ -58,20 +58,18 @@ def generate_shards_for_model(model_type: str, splits_to_test: list = None):
             os.makedirs(split_dir, exist_ok=True)
             
             # Prepare arguments for prepare_shards
+            # Always use num-splits=1 to create exactly 2 shards for our 2-worker system
             args = [
                 'prepare_shards.py',
                 '--model', model_type,
-                '--num-splits', str(num_splits),
+                '--num-splits', '1',
                 '--num-classes', '10',
                 '--shards-dir', split_dir
             ]
             
-            # For MobileNetV2, we need to specify split-block
-            if model_type.lower() == 'mobilenetv2' and num_splits == 1:
-                # For single split, use the middle block
-                args.extend(['--split-block', str(max_splits // 2)])
-            elif model_type.lower() == 'mobilenetv2' and num_splits < max_splits:
-                # For MobileNetV2, num_splits represents the block number
+            # For MobileNetV2, specify which block to split at
+            if model_type.lower() == 'mobilenetv2' and num_splits > 0:
+                # num_splits represents the block number to split at
                 args.extend(['--split-block', str(num_splits)])
             
             sys.argv = args
