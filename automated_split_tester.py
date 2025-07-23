@@ -424,11 +424,7 @@ class AutomatedSplitTester:
             if throughput_match:
                 metrics['system_inference_throughput_imgs_per_s'] = float(throughput_match.group(1))
 
-            # Extract end-to-end latency
-            latency_match = re.search(r'Actual per-image latency: ([\d.]+)ms', content)
-            if latency_match:
-                # Convert ms to seconds for the average
-                metrics['average_metrics_per_batch']['end_to_end_latency_s'] = float(latency_match.group(1)) / 1000.0
+            # Note: end-to-end latency will be calculated later as sum of part1 + part2 + network
 
             # Extract total time and images for calculating average batch time
             time_match = re.search(r'Total time: ([\d.]+)s', content)
@@ -469,10 +465,13 @@ class AutomatedSplitTester:
                     metrics['average_metrics_per_batch']['network_time_s'] = avg_network_ms / 1000.0
 
             # Extract intermediate data size from tensor shape logs
-            tensor_matches = re.findall(r'Sending tensor shape .*?(\d+), (\d+), (\d+), (\d+)', content)
+            tensor_matches = re.findall(r'Sending tensor shape.*?torch\.Size\(\[(\d+), (\d+), (\d+), (\d+)\]\)', content)
             if not tensor_matches:
-                # Try alternative pattern
-                tensor_matches = re.findall(r'tensor shape: .*?(\d+), (\d+), (\d+), (\d+)', content)
+                # Try alternative patterns
+                tensor_matches = re.findall(r'received tensor shape:.*?torch\.Size\(\[(\d+), (\d+), (\d+), (\d+)\]\)', content)
+            if not tensor_matches:
+                # Try pattern without torch.Size
+                tensor_matches = re.findall(r'tensor shape.*?\[(\d+), (\d+), (\d+), (\d+)\]', content)
 
             if tensor_matches:
                 # Calculate size from first match (batch, channels, height, width)
@@ -508,6 +507,26 @@ class AutomatedSplitTester:
                 # Default intermediate size based on typical layer outputs
                 # This is just an estimate - actual size depends on model and split point
                 metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = 8 * 32 * 56 * 56 * 4
+            
+            # Calculate network throughput if we have both data size and network time
+            # This needs to be done after setting default values
+            if (metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] and 
+                metrics['average_metrics_per_batch']['network_time_s'] and 
+                metrics['average_metrics_per_batch']['network_time_s'] > 0):
+                size_mb = metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] / (1024 * 1024)
+                size_mbits = size_mb * 8
+                network_time_s = metrics['average_metrics_per_batch']['network_time_s']
+                metrics['average_metrics_per_batch']['network_throughput_mbps'] = size_mbits / network_time_s
+            
+            # Calculate end-to-end latency as sum of part1 + part2 + network times
+            if (metrics['average_metrics_per_batch']['part1_inference_time_s'] is not None and
+                metrics['average_metrics_per_batch']['part2_inference_time_s'] is not None and
+                metrics['average_metrics_per_batch']['network_time_s'] is not None):
+                metrics['average_metrics_per_batch']['end_to_end_latency_s'] = (
+                    metrics['average_metrics_per_batch']['part1_inference_time_s'] +
+                    metrics['average_metrics_per_batch']['part2_inference_time_s'] +
+                    metrics['average_metrics_per_batch']['network_time_s']
+                )
 
             return metrics
 
