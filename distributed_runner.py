@@ -282,6 +282,8 @@ class LocalLoadingShardWrapper(nn.Module):
         compute_time = (end_time - start_time) * 1000  # Convert to ms
         
         logger.info(f"[FORWARD PASS] Shard {self.shard_id} computation completed in {compute_time:.2f}ms")
+        # Add parseable format for automated_split_tester
+        logger.info(f"[SHARD_TIMING] shard_{self.shard_id} processing_time_ms={compute_time:.2f} batch_id={batch_id}")
         
         # Record stage metrics
         if self.metrics_collector:

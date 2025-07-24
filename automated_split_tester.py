@@ -487,7 +487,12 @@ class AutomatedSplitTester:
                     metrics['average_metrics_per_batch']['network_throughput_mbps'] = size_mbits / network_time_s
 
             # Extract shard timing information if available
-            shard_matches = re.findall(r'Shard (\d+) computation completed in ([\d.]+)ms', content)
+            # Try new format first
+            shard_matches = re.findall(r'\[SHARD_TIMING\] shard_(\d+) processing_time_ms=([\d.]+)', content)
+            if not shard_matches:
+                # Fall back to old format
+                shard_matches = re.findall(r'Shard (\d+) computation completed in ([\d.]+)ms', content)
+            
             if shard_matches:
                 shard_times = {}
                 for shard_id, time_ms in shard_matches:
@@ -496,11 +501,16 @@ class AutomatedSplitTester:
                         shard_times[shard_id] = []
                     shard_times[shard_id].append(float(time_ms))
 
-                # Average the times for each shard
+                # Average the times for each shard (already in ms, convert to seconds)
+                # Note: These times are already per-batch since each forward pass processes a batch
                 if 0 in shard_times:
-                    metrics['average_metrics_per_batch']['part1_inference_time_s'] = sum(shard_times[0]) / len(shard_times[0]) / 1000.0
+                    avg_ms = sum(shard_times[0]) / len(shard_times[0])
+                    metrics['average_metrics_per_batch']['part1_inference_time_s'] = avg_ms / 1000.0
+                    logger.info(f"Shard 0 average time: {avg_ms:.2f}ms per batch")
                 if 1 in shard_times:
-                    metrics['average_metrics_per_batch']['part2_inference_time_s'] = sum(shard_times[1]) / len(shard_times[1]) / 1000.0
+                    avg_ms = sum(shard_times[1]) / len(shard_times[1])
+                    metrics['average_metrics_per_batch']['part2_inference_time_s'] = avg_ms / 1000.0
+                    logger.info(f"Shard 1 average time: {avg_ms:.2f}ms per batch")
 
             # Set default values if not found
             if metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] is None:
