@@ -621,12 +621,12 @@ class EnhancedDistributedModel(nn.Module):
                 config = {
                     'model_type': self.model_type,
                     'models_dir': self.models_dir,
-                    'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
+                    'shards_dir': self.shards_dir,  # Keep as-is for remote expansion
                     'num_classes': self.num_classes,
                     'shard_id': shard_info['shard_id'],
                     'total_shards': metadata['num_shards'],
                     'shard_filename': shard_info['filename'],
-                    'shard_path': os.path.abspath(os.path.join(expanded_shards_dir, shard_info['path'])),
+                    'shard_path': shard_info['path'],  # Keep relative for remote loading
                     'split_block': self.split_block  # Add split_block for path resolution
                 }
                 
@@ -648,7 +648,7 @@ class EnhancedDistributedModel(nn.Module):
                 shard1_config = {
                     'model_type': self.model_type,
                     'models_dir': self.models_dir,
-                    'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
+                    'shards_dir': self.shards_dir,  # Keep as-is for remote expansion
                     'num_classes': self.num_classes,
                     'shard_id': 0,
                     'total_shards': 2,
@@ -666,7 +666,7 @@ class EnhancedDistributedModel(nn.Module):
                 shard2_config = {
                     'model_type': self.model_type,
                     'models_dir': self.models_dir,
-                    'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
+                    'shards_dir': self.shards_dir,  # Keep as-is for remote expansion
                     'num_classes': self.num_classes,
                     'shard_id': 1,
                     'total_shards': 2,
@@ -694,7 +694,7 @@ class EnhancedDistributedModel(nn.Module):
                     config = {
                         'model_type': self.model_type,
                         'models_dir': self.models_dir,
-                        'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
+                        'shards_dir': self.shards_dir,  # Keep as-is for remote expansion
                         'num_classes': self.num_classes,
                         'shard_id': i,
                         'total_shards': len(self.shards),
