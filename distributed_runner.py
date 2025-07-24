@@ -868,6 +868,9 @@ class EnhancedDistributedModel(nn.Module):
                                f"Est. network={estimated_network_ms:.2f}ms, "
                                f"Est. computation={estimated_computation_ms:.2f}ms")
                 
+                # Add parseable format for network time
+                self.logger.info(f"[NETWORK_TIMING] shard_{i} network_time_ms={estimated_network_ms:.2f} tensor_size_mb={tensor_size_mb:.2f} batch_id={batch_id}")
+                
                 # Record as "RPC latency" not "network latency" 
                 self.metrics_collector.record_network_metrics(rpc_total_ms, estimated_network_ms)
         

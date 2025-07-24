@@ -448,8 +448,16 @@ class AutomatedSplitTester:
                         metrics['average_metrics_per_batch']['part1_inference_time_s'] = avg_batch_time * 0.3
                         metrics['average_metrics_per_batch']['part2_inference_time_s'] = avg_batch_time * 0.6
 
-                    # Network time is the remainder
-                    metrics['average_metrics_per_batch']['network_time_s'] = avg_batch_time * 0.1
+                    # Extract actual network times if available
+                    network_matches = re.findall(r'\[NETWORK_TIMING\] shard_\d+ network_time_ms=([\d.]+)', content)
+                    if network_matches:
+                        network_times_ms = [float(t) for t in network_matches]
+                        avg_network_ms = sum(network_times_ms) / len(network_times_ms)
+                        metrics['average_metrics_per_batch']['network_time_s'] = avg_network_ms / 1000.0
+                        logger.info(f"Average network time: {avg_network_ms:.2f}ms per RPC call")
+                    else:
+                        # Fallback: Network time is estimated as 10% of batch time
+                        metrics['average_metrics_per_batch']['network_time_s'] = avg_batch_time * 0.1
 
             # Get the directory of the output file
             output_dir = os.path.dirname(output_file)
@@ -528,10 +536,18 @@ class AutomatedSplitTester:
                 network_time_s = metrics['average_metrics_per_batch']['network_time_s']
                 metrics['average_metrics_per_batch']['network_throughput_mbps'] = size_mbits / network_time_s
             
-            # Calculate end-to-end latency as sum of part1 + part2 + network times
-            if (metrics['average_metrics_per_batch']['part1_inference_time_s'] is not None and
-                metrics['average_metrics_per_batch']['part2_inference_time_s'] is not None and
-                metrics['average_metrics_per_batch']['network_time_s'] is not None):
+            # Calculate end-to-end latency
+            # For pipelined execution, we should use the actual batch processing time
+            if metrics['system_inference_throughput_imgs_per_s'] and metrics['system_inference_throughput_imgs_per_s'] > 0:
+                # Calculate from throughput: time_per_batch = batch_size / throughput
+                batch_size = 8
+                time_per_batch = batch_size / metrics['system_inference_throughput_imgs_per_s']
+                metrics['average_metrics_per_batch']['end_to_end_latency_s'] = time_per_batch
+                logger.info(f"End-to-end latency from throughput: {time_per_batch:.3f}s per batch")
+            elif (metrics['average_metrics_per_batch']['part1_inference_time_s'] is not None and
+                  metrics['average_metrics_per_batch']['part2_inference_time_s'] is not None and
+                  metrics['average_metrics_per_batch']['network_time_s'] is not None):
+                # Fallback: sum of components (only valid for non-pipelined)
                 metrics['average_metrics_per_batch']['end_to_end_latency_s'] = (
                     metrics['average_metrics_per_batch']['part1_inference_time_s'] +
                     metrics['average_metrics_per_batch']['part2_inference_time_s'] +
