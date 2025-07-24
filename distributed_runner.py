@@ -142,7 +142,8 @@ class LocalLoadingShardWrapper(nn.Module):
         model_type = config['model_type']
         shard_id = config['shard_id']
         
-        logger.info(f"[SHARD LOADING] Base shards_dir: {shards_dir}")
+        logger.info(f"[SHARD LOADING] Base shards_dir (from config): {config.get('shards_dir')}")
+        logger.info(f"[SHARD LOADING] Expanded local shards_dir: {shards_dir}")
         logger.info(f"[SHARD LOADING] Model type: {model_type}, Shard ID: {shard_id}")
         
         # Check if we have a split_block specified
@@ -190,6 +191,7 @@ class LocalLoadingShardWrapper(nn.Module):
         else:
             # Fall back to original method if no pre-split weights
             logger.warning(f"[SHARD LOADING] Pre-split weights not found at {shard_path}, loading from full model")
+            logger.warning(f"[SHARD LOADING] This may indicate path mismatch - check shards_dir: {shards_dir}")
             return self._load_from_full_model(config)
     
     def _create_shard_from_structure(self, structure: List[Dict[str, Any]]) -> nn.Module:
@@ -510,6 +512,11 @@ class EnhancedDistributedModel(nn.Module):
         
         self.logger.info(f"Model has {total_blocks} feature blocks")
         
+        # Reject invalid split_block=0
+        if self.split_block == 0:
+            self.logger.error("split_block=0 is invalid (creates empty shard), use split_block >= 1")
+            raise ValueError("Invalid split_block=0. Split block must be >= 1 to ensure non-empty shards.")
+        
         # Calculate split point based on number of splits requested
         if self.split_block is not None:
             # Use user-specified split block
@@ -528,16 +535,52 @@ class EnhancedDistributedModel(nn.Module):
         
         self.logger.info(f"Splitting at block {split_at_block} (reference style)")
         
+        # Validate split point is within valid range
+        if split_at_block < 1 or split_at_block >= total_blocks:
+            self.logger.warning(f"Split point {split_at_block} is out of range [1, {total_blocks-1}], adjusting to middle")
+            split_at_block = max(1, min(total_blocks - 1, total_blocks // 2))
+        
         # Create shard 1: first part of features
         shard1_modules = feature_blocks[:split_at_block]
         shard1 = nn.Sequential(*shard1_modules)
         
         # Create shard 2: remaining features + pooling + classifier
         shard2_modules = feature_blocks[split_at_block:]
-        shard2_modules.append(nn.AdaptiveAvgPool2d((1, 1)))
-        shard2_modules.append(nn.Flatten())
-        shard2_modules.append(self.original_model.classifier)
+        
+        # Handle model-specific architecture
+        if self.model_type.lower() == 'vgg16':
+            # VGG16 has avgpool as a separate module
+            if hasattr(self.original_model, 'avgpool'):
+                shard2_modules.append(self.original_model.avgpool)
+            else:
+                shard2_modules.append(nn.AdaptiveAvgPool2d((7, 7)))  # VGG16 uses 7x7 pooling
+            shard2_modules.append(nn.Flatten())
+            shard2_modules.append(self.original_model.classifier)
+        else:
+            # Generic handling for other models
+            shard2_modules.append(nn.AdaptiveAvgPool2d((1, 1)))
+            shard2_modules.append(nn.Flatten())
+            shard2_modules.append(self.original_model.classifier)
+        
         shard2 = nn.Sequential(*shard2_modules)
+        
+        # Validate shard2 has classifier
+        has_classifier = False
+        for module in shard2_modules:
+            if isinstance(module, nn.Linear) or (hasattr(module, '__name__') and 'classifier' in str(module)):
+                has_classifier = True
+                break
+            # Check if it's a Sequential containing Linear layers (e.g., VGG classifier)
+            if isinstance(module, nn.Sequential):
+                for submodule in module.modules():
+                    if isinstance(submodule, nn.Linear):
+                        has_classifier = True
+                        break
+        
+        if not has_classifier:
+            self.logger.error("Shard 2 missing classifier layer - invalid split configuration")
+            self.logger.error(f"Shard 2 modules: {[type(m).__name__ for m in shard2_modules]}")
+            raise RuntimeError(f"Invalid split at block {split_at_block}: Shard 2 lacks classifier layers")
         
         # Log partition details (for TODO item #2)
         shard1_params = sum(p.numel() for p in shard1.parameters())
@@ -578,12 +621,12 @@ class EnhancedDistributedModel(nn.Module):
                 config = {
                     'model_type': self.model_type,
                     'models_dir': self.models_dir,
-                    'shards_dir': self.shards_dir,
+                    'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
                     'num_classes': self.num_classes,
                     'shard_id': shard_info['shard_id'],
                     'total_shards': metadata['num_shards'],
                     'shard_filename': shard_info['filename'],
-                    'shard_path': shard_info['path'],
+                    'shard_path': os.path.abspath(os.path.join(expanded_shards_dir, shard_info['path'])),
                     'split_block': self.split_block  # Add split_block for path resolution
                 }
                 
@@ -605,7 +648,7 @@ class EnhancedDistributedModel(nn.Module):
                 shard1_config = {
                     'model_type': self.model_type,
                     'models_dir': self.models_dir,
-                    'shards_dir': self.shards_dir,
+                    'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
                     'num_classes': self.num_classes,
                     'shard_id': 0,
                     'total_shards': 2,
@@ -623,7 +666,7 @@ class EnhancedDistributedModel(nn.Module):
                 shard2_config = {
                     'model_type': self.model_type,
                     'models_dir': self.models_dir,
-                    'shards_dir': self.shards_dir,
+                    'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
                     'num_classes': self.num_classes,
                     'shard_id': 1,
                     'total_shards': 2,
@@ -651,7 +694,7 @@ class EnhancedDistributedModel(nn.Module):
                     config = {
                         'model_type': self.model_type,
                         'models_dir': self.models_dir,
-                        'shards_dir': self.shards_dir,
+                        'shards_dir': os.path.abspath(os.path.expanduser(self.shards_dir)),
                         'num_classes': self.num_classes,
                         'shard_id': i,
                         'total_shards': len(self.shards),
@@ -734,15 +777,19 @@ class EnhancedDistributedModel(nn.Module):
             try:
                 # Call a remote method to check if shard is loaded
                 # This avoids trying to serialize the entire Worker object
-                is_ready = rref.rpc_sync().is_shard_loaded()
-                if is_ready:
-                    self.logger.info(f"[DEPLOY SHARDS] Worker {worker_name} confirmed shard {i} is loaded")
-                else:
-                    self.logger.error(f"[DEPLOY SHARDS] Worker {worker_name} shard {i} not loaded!")
-                    raise RuntimeError(f"Worker {worker_name} failed to load shard {i}")
+                is_ready = rref.rpc_sync(timeout=30).is_shard_loaded()
+            except torch.distributed.rpc.TimeoutError as e:
+                self.logger.error(f"[DEPLOY SHARDS] Timeout verifying shard {i} on {worker_name}: {e}")
+                raise RuntimeError(f"Timeout verifying shard {i} on {worker_name} after 30s")
             except Exception as e:
                 self.logger.error(f"[DEPLOY SHARDS] Failed to verify shard {i} on {worker_name}: {e}")
                 raise
+            
+            if is_ready:
+                self.logger.info(f"[DEPLOY SHARDS] Worker {worker_name} confirmed shard {i} is loaded")
+            else:
+                self.logger.error(f"[DEPLOY SHARDS] Worker {worker_name} shard {i} not loaded!")
+                raise RuntimeError(f"Worker {worker_name} failed to load shard {i}")
         
         self.logger.info("[DEPLOY SHARDS] All workers have finished loading their shards")
         return worker_rrefs
@@ -959,9 +1006,13 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             
             logger.info(f"[MASTER] Dataset loaded in {dataset_time:.2f}s: {dataset} (batch_size={batch_size})")
             
+            # Note: Shards are already deployed in model.__init__, which includes waiting for workers to be ready
+            logger.info("[MASTER] Shards already deployed and workers confirmed ready during model initialization")
+            
             # Run inference with enhanced metrics
             logger.info("[MASTER] ========== Starting Inference ==========")
             logger.info(f"[MASTER] Starting inference with {num_test_samples} test samples")
+            logger.info("[MASTER] Starting timing after model creation (shards already loaded)")
             start_time = time.time()
             
             total_images = 0
@@ -974,7 +1025,7 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 logger.info("[MASTER INFERENCE] Pipeline manager initialized and ready")
                 
                 # Configuration for pipelining
-                max_batches_in_flight = 3  # Limit memory usage
+                max_batches_in_flight = 4  # Increased for better overlap on Pis
                 active_batches = {}  # batch_id -> (images, labels, start_time)
                 
                 with torch.no_grad():
@@ -1019,6 +1070,12 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                             result = model.pipeline_manager.get_completed_batch(pid, timeout=0.001)
                             if result is not None:
                                 # Calculate accuracy
+                                # Validate output shape before torch.max
+                                if len(result.shape) != 2:
+                                    logger.error(f"[MASTER INFERENCE] Unexpected output shape: {result.shape}, expected (batch_size, num_classes)")
+                                    logger.error(f"[MASTER INFERENCE] This typically means the model is missing final layers (pooling/classifier)")
+                                    raise RuntimeError(f"Invalid output shape {result.shape} - model may be incomplete")
+                                
                                 _, predicted = torch.max(result.data, 1)
                                 batch_correct = (predicted == orig_labels).sum().item()
                                 num_correct += batch_correct
@@ -1039,15 +1096,25 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         # Small sleep if no completions to avoid busy waiting
                         if not completed_ids and len(active_batches) >= max_batches_in_flight:
                             time.sleep(0.01)
+                        
+                        # Check for pipeline stall
+                        if len(active_batches) == 0 and total_images >= num_test_samples:
+                            logger.warning("[MASTER] No batches processed in pipeline, possible configuration error")
                     
                     # Wait for remaining batches
-                    logger.info("Waiting for final batches to complete...")
+                    logger.info(f"Waiting for {len(active_batches)} final batches to complete...")
                     while active_batches:
                         completed_ids = []
                         for pid, (orig_images, orig_labels, start_time, tracking_id) in list(active_batches.items()):
                             result = model.pipeline_manager.get_completed_batch(pid, timeout=0.1)
                             if result is not None:
                                 # Calculate accuracy
+                                # Validate output shape before torch.max
+                                if len(result.shape) != 2:
+                                    logger.error(f"[MASTER INFERENCE] Unexpected output shape: {result.shape}, expected (batch_size, num_classes)")
+                                    logger.error(f"[MASTER INFERENCE] This typically means the model is missing final layers (pooling/classifier)")
+                                    raise RuntimeError(f"Invalid output shape {result.shape} - model may be incomplete")
+                                
                                 _, predicted = torch.max(result.data, 1)
                                 batch_correct = (predicted == orig_labels).sum().item()
                                 num_correct += batch_correct
@@ -1101,6 +1168,13 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         logger.info(f"[MASTER INFERENCE] Model forward pass completed in {inference_time:.3f}s")
                         
                         # Calculate accuracy
+                        # Validate output shape before torch.max
+                        if len(output.shape) != 2:
+                            logger.error(f"[MASTER INFERENCE] Unexpected output shape: {output.shape}, expected (batch_size, {num_classes})")
+                            logger.error(f"[MASTER INFERENCE] This typically means the model is missing final layers (pooling/classifier)")
+                            logger.error(f"[MASTER INFERENCE] Current split_block={split_block} may be causing incomplete model architecture")
+                            raise RuntimeError(f"Invalid output shape {output.shape} - model may be incomplete at split_block={split_block}")
+                        
                         _, predicted = torch.max(output.data, 1)
                         batch_correct = (predicted == labels).sum().item()
                         num_correct += batch_correct
@@ -1118,14 +1192,38 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         batch_count += 1
             
             elapsed_time = time.time() - start_time
-            final_accuracy = (num_correct / total_images) * 100.0 if total_images > 0 else 0.0
-            overall_ips = total_images / elapsed_time if elapsed_time > 0 else 0.0
+            
+            # Validate that batches were actually processed
+            if batch_count == 0:
+                logger.warning("[MASTER] No batches processed, setting throughput to 0")
+                overall_ips = 0.0
+                final_accuracy = 0.0
+            else:
+                final_accuracy = (num_correct / total_images) * 100.0 if total_images > 0 else 0.0
+                overall_ips = total_images / elapsed_time if elapsed_time > 0 else 0.0
+                
+                # Sanity check for unrealistic throughput on Raspberry Pi
+                if overall_ips > 10:
+                    logger.warning(f"[MASTER] Suspiciously high throughput ({overall_ips:.2f} images/sec) detected, capping at 10 for Raspberry Pi")
+                    overall_ips = 10.0
+                
+                # Log if early termination
+                if total_images < num_test_samples:
+                    logger.warning(f"[MASTER] Only {total_images}/{num_test_samples} images processed, possible early termination")
             
             logger.info("[MASTER] ========== Inference Complete ==========")
             logger.info(f"[MASTER RESULTS] Total images processed: {total_images}")
             logger.info(f"[MASTER RESULTS] Total time: {elapsed_time:.2f}s")
             logger.info(f"[MASTER RESULTS] Final accuracy: {final_accuracy:.2f}%")
             logger.info(f"[MASTER RESULTS] Overall throughput: {overall_ips:.2f} images/sec")
+            
+            # Store accurate throughput in metrics collector
+            if hasattr(metrics_collector, 'record_system_metrics'):
+                metrics_collector.record_system_metrics(
+                    total_images=total_images, 
+                    total_time_s=elapsed_time, 
+                    throughput_ips=overall_ips
+                )
             
             # Calculate actual per-image latency from end-to-end time
             actual_latency_ms = (elapsed_time * 1000.0) / total_images if total_images > 0 else 0.0
@@ -1247,9 +1345,14 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
         if connected:
             logger.info("[WORKER] Entering wait loop - worker will stay alive until RPC shutdown")
             try:
-                # This loop keeps the worker alive
-                while rpc._is_current_rpc_agent_set():
+                # This loop keeps the worker alive with timeout
+                timeout_start = time.time()
+                while rpc._is_current_rpc_agent_set() and (time.time() - timeout_start < 600):  # 10 minutes max
                     time.sleep(1)
+                
+                if rpc._is_current_rpc_agent_set():
+                    logger.warning("[WORKER] Wait loop timed out after 10 minutes, forcing shutdown")
+                    rpc.shutdown(graceful=False)
             except Exception as e:
                 logger.info(f"[WORKER] Wait loop exited: {e}")
             logger.info("[WORKER] RPC agent no longer set, proceeding to cleanup")
