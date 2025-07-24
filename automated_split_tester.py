@@ -437,18 +437,10 @@ class AutomatedSplitTester:
                 num_batches = total_images / batch_size
                 if num_batches > 0:
                     avg_batch_time = total_time / num_batches
-                    # If we have throughput, use it to get more accurate batch time
-                    if metrics['system_inference_throughput_imgs_per_s'] and metrics['system_inference_throughput_imgs_per_s'] > 0:
-                        # More accurate: batch_time = batch_size / throughput
-                        accurate_batch_time = batch_size / metrics['system_inference_throughput_imgs_per_s']
-                        # For pipelined execution, shard times overlap, so individual times can be > batch_time
-                        # Use realistic estimates based on the model
-                        metrics['average_metrics_per_batch']['part1_inference_time_s'] = accurate_batch_time * 0.5
-                        metrics['average_metrics_per_batch']['part2_inference_time_s'] = accurate_batch_time * 0.5
-                    else:
-                        # Fallback: use total time divided by batches (less accurate for pipelined)
-                        metrics['average_metrics_per_batch']['part1_inference_time_s'] = avg_batch_time * 0.3
-                        metrics['average_metrics_per_batch']['part2_inference_time_s'] = avg_batch_time * 0.6
+                    # Temporary estimates - will be overwritten if we find real shard timings
+                    # Don't use equal split - it's unrealistic
+                    metrics['average_metrics_per_batch']['part1_inference_time_s'] = avg_batch_time * 0.3
+                    metrics['average_metrics_per_batch']['part2_inference_time_s'] = avg_batch_time * 0.6
 
                     # Extract actual network times if available
                     network_matches = re.findall(r'\[NETWORK_TIMING\] shard_\d+ network_time_ms=([\d.]+)', content)

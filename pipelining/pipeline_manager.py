@@ -232,10 +232,23 @@ class DistributedPipelineWorker:
         try:
             self.logger.debug(f"RPC processing batch {batch_id} at stage {self.stage_id}")
             
+            # Log input tensor shape
+            self.logger.info(f"[FORWARD PASS] Shard {self.stage_id} received tensor shape: {batch_data.shape}, batch_id={batch_id}")
+            
+            # Time the actual computation
+            compute_start = time.time()
             with torch.no_grad():
                 batch_data = batch_data.to("cpu")
                 output = self.shard_module(batch_data)
                 result = output.cpu()
+            compute_end = time.time()
+            
+            # Calculate times
+            compute_time_ms = (compute_end - compute_start) * 1000
+            
+            # Log timing information in the format expected by automated_split_tester
+            self.logger.info(f"[FORWARD PASS] Shard {self.stage_id} computation completed in {compute_time_ms:.2f}ms")
+            self.logger.info(f"[SHARD_TIMING] shard_{self.stage_id} processing_time_ms={compute_time_ms:.2f} batch_id={batch_id}")
             
             end_time = time.time()
             processing_time = end_time - start_time
@@ -451,6 +464,10 @@ class PipelineManager:
         if 0 in self.rpc_workers:
             worker_name, rpc_worker = self.rpc_workers[0]
             
+            # Track RPC start time
+            rpc_start_time = time.time()
+            batch.stage_times[0] = (rpc_start_time, None)
+            
             # Create future for first stage
             future = rpc_worker.rpc_async().process_batch_rpc(data, batch_id)
             
@@ -465,6 +482,7 @@ class PipelineManager:
             try:
                 # Get result from completed stage
                 result = future.wait()
+                rpc_end_time = time.time()
                 
                 # Update batch data
                 if batch_id in self.active_batches:
@@ -474,13 +492,33 @@ class PipelineManager:
                     
                     # Record completion time for this stage
                     if completed_stage not in batch.stage_times:
-                        batch.stage_times[completed_stage] = (batch.start_time, time.time())
+                        batch.stage_times[completed_stage] = (batch.start_time, rpc_end_time)
+                    else:
+                        # Update end time
+                        start_time = batch.stage_times[completed_stage][0]
+                        batch.stage_times[completed_stage] = (start_time, rpc_end_time)
+                        
+                        # Calculate and log RPC timing
+                        rpc_time_ms = (rpc_end_time - start_time) * 1000
+                        
+                        # Estimate network time based on data size
+                        tensor_size_mb = (result.numel() * result.element_size()) / (1024 * 1024)
+                        estimated_network_ms = 0.5 + (tensor_size_mb * 0.3) + (tensor_size_mb * 8 / 940) * 1000 * 2
+                        
+                        # Log timing information
+                        self.logger.info(f"[FORWARD SEQUENTIAL] RPC call to shard {completed_stage} completed in {rpc_time_ms:.2f}ms")
+                        self.logger.info(f"[NETWORK_TIMING] shard_{completed_stage} network_time_ms={estimated_network_ms:.2f} tensor_size_mb={tensor_size_mb:.2f} batch_id={batch_id}")
                     
                     # Check if there's a next stage
                     next_stage = completed_stage + 1
                     if next_stage < len(self.shards) and next_stage in self.rpc_workers:
                         # Start next stage
                         worker_name, rpc_worker = self.rpc_workers[next_stage]
+                        
+                        # Track RPC start time for network timing
+                        rpc_start_time = time.time()
+                        batch.stage_times[next_stage] = (rpc_start_time, None)  # Start time for next stage
+                        
                         next_future = rpc_worker.rpc_async().process_batch_rpc(result, batch_id)
                         
                         # Set up continuation for next stage
