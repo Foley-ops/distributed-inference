@@ -466,27 +466,29 @@ class AutomatedSplitTester:
                     avg_network_ms = sum(total_network_times) / len(total_network_times)
                     metrics['average_metrics_per_batch']['network_time_s'] = avg_network_ms / 1000.0
 
-            # Extract intermediate data size from tensor shape logs
-            tensor_matches = re.findall(r'Sending tensor shape.*?torch\.Size\(\[(\d+), (\d+), (\d+), (\d+)\]\)', content)
-            if not tensor_matches:
-                # Try alternative patterns
-                tensor_matches = re.findall(r'received tensor shape:.*?torch\.Size\(\[(\d+), (\d+), (\d+), (\d+)\]\)', content)
-            if not tensor_matches:
-                # Try pattern without torch.Size
-                tensor_matches = re.findall(r'tensor shape.*?\[(\d+), (\d+), (\d+), (\d+)\]', content)
+            # Extract intermediate data size from NETWORK_TIMING logs (more accurate)
+            # Look for tensor_size_mb in network timing logs
+            tensor_size_matches = re.findall(r'\[NETWORK_TIMING\] shard_\d+ network_time_ms=[\d.]+ tensor_size_mb=([\d.]+)', content)
+            if tensor_size_matches:
+                # Use the maximum tensor size (usually from shard_0)
+                max_tensor_size_mb = max(float(size) for size in tensor_size_matches)
+                # Convert MB to bytes
+                metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = int(max_tensor_size_mb * 1024 * 1024)
+            else:
+                # Fallback: try to extract from tensor shape logs
+                tensor_matches = re.findall(r'Sending tensor shape.*?torch\.Size\(\[(\d+), (\d+), (\d+), (\d+)\]\)', content)
+                if not tensor_matches:
+                    # Try alternative patterns
+                    tensor_matches = re.findall(r'received tensor shape:.*?torch\.Size\(\[(\d+), (\d+), (\d+), (\d+)\]\)', content)
+                if not tensor_matches:
+                    # Try pattern without torch.Size
+                    tensor_matches = re.findall(r'tensor shape.*?\[(\d+), (\d+), (\d+), (\d+)\]', content)
 
-            if tensor_matches:
-                # Calculate size from first match (batch, channels, height, width)
-                b, c, h, w = map(int, tensor_matches[0])
-                # Size in bytes (float32 = 4 bytes per element)
-                metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = b * c * h * w * 4
-
-                # Calculate network throughput if we have network time
-                if metrics['average_metrics_per_batch']['network_time_s'] and metrics['average_metrics_per_batch']['network_time_s'] > 0:
-                    size_mb = metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] / (1024 * 1024)
-                    size_mbits = size_mb * 8
-                    network_time_s = metrics['average_metrics_per_batch']['network_time_s']
-                    metrics['average_metrics_per_batch']['network_throughput_mbps'] = size_mbits / network_time_s
+                if tensor_matches:
+                    # Calculate size from first match (batch, channels, height, width)
+                    b, c, h, w = map(int, tensor_matches[0])
+                    # Size in bytes (float32 = 4 bytes per element)
+                    metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = b * c * h * w * 4
 
             # Extract shard timing information if available
             # Try new format first
