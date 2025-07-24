@@ -1018,6 +1018,7 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             total_images = 0
             num_correct = 0
             batch_count = 0
+            batch_completion_times = []  # Track when each batch completes
             
             if use_pipelining and model.use_pipelining and model.pipeline_manager:
                 # Pipelined inference with multiple batches in flight
@@ -1085,6 +1086,9 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                                 # End batch tracking
                                 metrics_collector.end_batch(tracking_id, accuracy=batch_accuracy)
                                 
+                                # Track batch completion time
+                                batch_completion_times.append(time.time())
+                                
                                 logger.info(f"Completed batch {tracking_id + 1} accuracy: {batch_accuracy:.2f}%")
                                 completed_ids.append(pid)
                                 batch_count += 1
@@ -1123,6 +1127,9 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                                 
                                 # End batch tracking
                                 metrics_collector.end_batch(tracking_id, accuracy=batch_accuracy)
+                                
+                                # Track batch completion time
+                                batch_completion_times.append(time.time())
                                 
                                 logger.info(f"Completed batch {tracking_id + 1} accuracy: {batch_accuracy:.2f}%")
                                 completed_ids.append(pid)
@@ -1185,6 +1192,9 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                         # End batch tracking
                         metrics_collector.end_batch(batch_count, accuracy=batch_accuracy)
                         
+                        # Track batch completion time
+                        batch_completion_times.append(time.time())
+                        
                         logger.info(f"[MASTER INFERENCE] Batch {batch_count + 1} completed: "
                                    f"accuracy={batch_accuracy:.2f}%, "
                                    f"time={inference_time:.3f}s, "
@@ -1201,6 +1211,26 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             else:
                 final_accuracy = (num_correct / total_images) * 100.0 if total_images > 0 else 0.0
                 overall_ips = total_images / elapsed_time if elapsed_time > 0 else 0.0
+                
+                # Calculate inter-batch throughput (more accurate for pipelining)
+                inter_batch_ips = 0.0
+                if len(batch_completion_times) > 1:
+                    # Calculate average time between batch completions
+                    intervals = []
+                    for i in range(1, len(batch_completion_times)):
+                        interval = batch_completion_times[i] - batch_completion_times[i-1]
+                        intervals.append(interval)
+                    
+                    if intervals:
+                        avg_interval = sum(intervals) / len(intervals)
+                        inter_batch_ips = batch_size / avg_interval if avg_interval > 0 else 0.0
+                        logger.info(f"[MASTER] Inter-batch throughput (realistic for pipelining): {inter_batch_ips:.2f} images/sec")
+                        logger.info(f"[MASTER] Average interval between batch completions: {avg_interval:.3f}s")
+                        
+                        # Use inter-batch throughput as primary metric for pipelined inference
+                        if use_pipelining:
+                            logger.info(f"[MASTER] Using inter-batch throughput as primary metric for pipelined inference")
+                            overall_ips = inter_batch_ips
                 
                 # Sanity check for unrealistic throughput on Raspberry Pi
                 if overall_ips > 10:
