@@ -1332,6 +1332,18 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 test_loader.stop()
                 logger.info("Stopped prefetch loader")
 
+            # RPC Cleanup - MOVED INSIDE FINALLY BLOCK
+            if rpc_initialized:
+                logger.info("[CLEANUP] ========== Starting RPC Shutdown ==========")
+                logger.info(f"[CLEANUP] Rank {rank} initiating RPC shutdown")
+                try:
+                    shutdown_start = time.time()
+                    rpc.shutdown(graceful=False)
+                    shutdown_time = time.time() - shutdown_start
+                    logger.info(f"[CLEANUP] RPC shutdown completed successfully in {shutdown_time:.2f}s")
+                except Exception as e:
+                    logger.error(f"[CLEANUP] Error during RPC shutdown: {e}", exc_info=True)
+
     else:  # Worker nodes
         logger.info("[WORKER] ========================================")
         logger.info(f"[WORKER] Initializing enhanced worker node with rank {rank}")
