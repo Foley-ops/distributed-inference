@@ -26,18 +26,18 @@ class ModelLoader:
         },
         "inceptionv3": {
             "model_class": torchvision_models.inception_v3,
-            "weight_file": "inception_cifar10.pth",
+            "weight_file": "inception_100epochs_jul16.pth",
             "input_size": (299, 299),
             "init_kwargs": {"aux_logits": False}
         },
         "alexnet": {
             "model_class": torchvision_models.alexnet,
-            "weight_file": "alexnet_cifar10_25epochs.pth",
+            "weight_file": "alexnet_100epochs_jul16.pth",
             "input_size": (224, 224)
         },
         "resnet18": {
             "model_class": torchvision_models.resnet18,
-            "weight_file": "resnet18_cifar10.pth",
+            "weight_file": "resnet18_100epochs_jul16.pth",
             "input_size": (224, 224)
         },
         "resnet50": {
@@ -47,7 +47,7 @@ class ModelLoader:
         },
         "vgg16": {
             "model_class": torchvision_models.vgg16,
-            "weight_file": "vgg16_cifar10_25epochs.pth",
+            "weight_file": "vgg16_100epochs_jul16.pth",
             "input_size": (224, 224)
         }
     }

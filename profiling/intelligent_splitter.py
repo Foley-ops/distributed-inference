@@ -329,6 +329,14 @@ class IntelligentSplitter:
         if 'functional.' in next_name:
             return True
         
+        # RESNET: Keep residual blocks together
+        if self._in_same_resnet_block(current_name, next_name):
+            return True
+            
+        # INCEPTION: Keep inception modules together
+        if self._in_same_inception_module(current_name, next_name):
+            return True
+        
         # Keep consecutive layers in the same architectural block together
         if ('features' in current_name and 'features' in next_name and
             self._same_feature_block(current_name, next_name)):
@@ -350,6 +358,38 @@ class IntelligentSplitter:
         
         return block1 == block2 and block1 != -1
     
+    def _in_same_resnet_block(self, name1: str, name2: str) -> bool:
+        """Check if two layers are in the same ResNet residual block."""
+        import re
+        
+        # ResNet block patterns: layer1.0.conv1, layer1.0.bn1, layer1.0.downsample.0, etc.
+        pattern = r'layer(\d+)\.(\d+)\.'
+        
+        match1 = re.search(pattern, name1)
+        match2 = re.search(pattern, name2)
+        
+        if match1 and match2:
+            # Same layer group (e.g., layer1) and same block number (e.g., 0)
+            return match1.group(1) == match2.group(1) and match1.group(2) == match2.group(2)
+        
+        return False
+    
+    def _in_same_inception_module(self, name1: str, name2: str) -> bool:
+        """Check if two layers are in the same Inception module."""
+        import re
+        
+        # Inception patterns: Mixed_5b.branch1x1.conv, Mixed_5b.branch3x3.conv, etc.
+        pattern = r'(Mixed_\w+)\.'
+        
+        match1 = re.search(pattern, name1)
+        match2 = re.search(pattern, name2)
+        
+        if match1 and match2:
+            # Same Mixed module (e.g., Mixed_5b)
+            return match1.group(1) == match2.group(1)
+        
+        return False
+    
     def _is_architectural_boundary(self, current: LayerProfile, next: Optional[LayerProfile]) -> bool:
         """Check if this is a good architectural boundary for splitting."""
         if not next:
@@ -362,6 +402,28 @@ class IntelligentSplitter:
         if 'features' in current_name and 'classifier' in next_name:
             return True  # Features to classifier boundary
         
+        # RESNET: Between different residual blocks
+        if not self._in_same_resnet_block(current_name, next_name):
+            # Check if we're transitioning between ResNet blocks
+            import re
+            curr_match = re.search(r'layer(\d+)\.(\d+)\.', current_name)
+            next_match = re.search(r'layer(\d+)\.(\d+)\.', next_name)
+            if curr_match and next_match:
+                # Different blocks = good split point
+                if curr_match.group(1) != next_match.group(1) or curr_match.group(2) != next_match.group(2):
+                    return True
+        
+        # INCEPTION: Between different inception modules  
+        if not self._in_same_inception_module(current_name, next_name):
+            # Check if we're transitioning between Inception modules
+            import re
+            curr_match = re.search(r'(Mixed_\w+)\.', current_name)
+            next_match = re.search(r'(Mixed_\w+)\.', next_name)
+            if curr_match and next_match:
+                # Different modules = good split point
+                if curr_match.group(1) != next_match.group(1):
+                    return True
+        
         # Between different feature blocks
         if ('features' in current_name and 'features' in next_name and
             not self._same_feature_block(current_name, next_name)):
@@ -369,10 +431,17 @@ class IntelligentSplitter:
         
         # After pooling layers (good split points)
         if any(pool in current_name.lower() for pool in ['pool', 'avgpool', 'maxpool']):
+            # But not if the next layer is part of a residual block
+            if not any(pattern in next_name for pattern in ['downsample', 'shortcut']):
+                return True
+        
+        # VGG/AlexNet style: After ReLU before next Conv (simple sequential models)
+        if ('relu' in current_name.lower() and 'conv' in next_name.lower() and 
+            'layer' not in current_name and 'layer' not in next_name):  # Not ResNet
             return True
         
-        # Default: allow most splits but with lower priority
-        return True
+        # Don't allow arbitrary splits - must be at a recognized boundary
+        return False
     
     def _evaluate_split_configuration(self, split_indices: List[int], 
                                     split_points: List[SplitPoint],

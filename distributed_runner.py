@@ -781,7 +781,7 @@ class EnhancedDistributedModel(nn.Module):
                 # Call a remote method to check if shard is loaded
                 # This avoids trying to serialize the entire Worker object
                 is_ready = rref.rpc_sync(timeout=30).is_shard_loaded()
-            except torch.distributed.rpc.TimeoutError as e:
+            except TimeoutError as e:
                 self.logger.error(f"[DEPLOY SHARDS] Timeout verifying shard {i} on {worker_name}: {e}")
                 raise RuntimeError(f"Timeout verifying shard {i} on {worker_name} after 30s")
             except Exception as e:
