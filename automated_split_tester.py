@@ -161,7 +161,12 @@ class AutomatedSplitTester:
 
         if use_pipelining:
             cmd.append("--use-pipelining")
-        cmd.append("--use-intelligent-splitting")
+        
+        # When using local loading with pre-generated shards, disable intelligent splitting
+        if use_optimizations:
+            cmd.append("--disable-intelligent-splitting")
+        else:
+            cmd.append("--use-intelligent-splitting")
 
         # Add optimization flags
         if use_optimizations:
