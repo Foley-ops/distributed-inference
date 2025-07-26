@@ -940,6 +940,11 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
     # Setup RPC environment
     os.environ['MASTER_ADDR'] = master_addr
     os.environ['MASTER_PORT'] = master_port
+    
+    # Force CPU-only operation for TensorPipe
+    os.environ['CUDA_VISIBLE_DEVICES'] = ''
+    os.environ['TP_ENABLE_SHM'] = '0'  # Disable shared memory transport
+    os.environ['TP_ENABLE_CMA'] = '0'  # Disable Cross Memory Attach
 
     # Use network interface from .env file or defaults
     gloo_ifname = os.getenv('GLOO_SOCKET_IFNAME', 'eth0' if rank == 0 else 'eth0')
@@ -964,8 +969,7 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             rpc_backend_options = rpc.TensorPipeRpcBackendOptions(
                 num_worker_threads=num_threads,
                 rpc_timeout=3600,
-                init_method=f"tcp://{master_addr}:{master_port}",
-                devices=["cpu"]  # Explicitly specify CPU-only devices
+                init_method=f"tcp://{master_addr}:{master_port}"
             )
 
             logger.info("[MASTER RPC] Calling rpc.init_rpc...")
@@ -1362,11 +1366,10 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 logger.info(f"[WORKER RPC] Connecting to master at tcp://{master_addr}:{master_port}")
 
                 rpc_backend_options = rpc.TensorPipeRpcBackendOptions(
-                    num_worker_threads=num_threads,
-                    rpc_timeout=3600,
-                    init_method=f"tcp://{master_addr}:{master_port}",
-                    devices=["cpu"]  # Explicitly specify CPU-only devices
-                )
+                num_worker_threads=num_threads,
+                rpc_timeout=3600,
+                init_method=f"tcp://{master_addr}:{master_port}"
+            )
 
                 logger.info(f"[WORKER RPC] Calling rpc.init_rpc for worker{rank}...")
                 rpc.init_rpc(f"worker{rank}", rank=rank, world_size=world_size,
