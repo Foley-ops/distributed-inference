@@ -964,7 +964,9 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             rpc_backend_options = rpc.TensorPipeRpcBackendOptions(
                 num_worker_threads=num_threads,
                 rpc_timeout=3600,
-                init_method=f"tcp://{master_addr}:{master_port}"
+                init_method=f"tcp://{master_addr}:{master_port}",
+                _transports=["uv"],  # Use only UV transport, no CUDA
+                _channels=["uv"]     # Use only UV channels, no CUDA
             )
 
             logger.info("[MASTER RPC] Calling rpc.init_rpc...")
@@ -1363,7 +1365,9 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 rpc_backend_options = rpc.TensorPipeRpcBackendOptions(
                     num_worker_threads=num_threads,
                     rpc_timeout=3600,
-                    init_method=f"tcp://{master_addr}:{master_port}"
+                    init_method=f"tcp://{master_addr}:{master_port}",
+                    _transports=["uv"],  # Use only UV transport, no CUDA
+                    _channels=["uv"]     # Use only UV channels, no CUDA
                 )
 
                 logger.info(f"[WORKER RPC] Calling rpc.init_rpc for worker{rank}...")
