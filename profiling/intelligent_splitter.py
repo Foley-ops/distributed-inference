@@ -723,9 +723,17 @@ class IntelligentSplitter:
         Returns:
             List of Sequential modules representing shards
         """
-        # Get all named modules as a list
-        named_modules = list(model.named_modules())
-        module_dict = {name: module for name, module in named_modules if len(list(module.children())) == 0}
+        # First, we need to build an ordered list of modules that matches the profiler's order
+        # The profiler captures modules in execution order, so we need to preserve this
+        
+        self.logger.info(f"Creating shards from {len(layer_names)} profiled layers")
+        self.logger.info(f"Split configuration has {len(split.shards)} shards")
+        
+        # Build ordered module list based on model architecture
+        ordered_modules = self._extract_modules_in_order(model, layer_names)
+        
+        if len(ordered_modules) != len(layer_names):
+            self.logger.warning(f"Module count mismatch: extracted {len(ordered_modules)}, expected {len(layer_names)}")
         
         # Get the full model structure to understand architectural boundaries
         model_structure = self._analyze_model_structure(model)
@@ -734,18 +742,18 @@ class IntelligentSplitter:
         for shard_idx, layer_indices in enumerate(split.shards):
             shard_modules = []
             
+            self.logger.info(f"Creating shard {shard_idx} with layer indices {layer_indices[:5]}...")
+            
             for layer_idx in layer_indices:
-                if layer_idx < len(layer_names):
-                    layer_name = layer_names[layer_idx]
-                    # Skip functional operations - they don't exist as nn.Modules
-                    if 'functional.' in layer_name:
-                        self.logger.debug(f"Skipping functional operation in shard creation: {layer_name}")
-                        continue
-                    
-                    if layer_name in module_dict:
-                        shard_modules.append(module_dict[layer_name])
-                    else:
-                        self.logger.warning(f"Layer {layer_name} not found in model")
+                if layer_idx < len(ordered_modules):
+                    module = ordered_modules[layer_idx]
+                    if module is not None:  # Skip None entries (functional ops)
+                        shard_modules.append(module)
+                        self.logger.debug(f"Added module at index {layer_idx} to shard {shard_idx}")
+                else:
+                    self.logger.warning(f"Layer index {layer_idx} out of range (max: {len(ordered_modules)-1})")
+            
+            self.logger.info(f"Shard {shard_idx} has {len(shard_modules)} modules")
             
             # Add architectural transition layers if needed
             shard_with_transitions = self._add_transition_layers(
@@ -760,6 +768,159 @@ class IntelligentSplitter:
         self.logger.info(f"Created {len(shards)} shards from split configuration")
         return shards
     
+    def _extract_modules_in_order(self, model: nn.Module, layer_names: List[str]) -> List[Optional[nn.Module]]:
+        """
+        Extract modules in the same order as they were profiled.
+        Returns a list where each index corresponds to the profiled layer at that index.
+        None entries indicate functional operations that don't have corresponding modules.
+        """
+        ordered_modules = []
+        
+        # Different extraction strategy based on model architecture
+        model_type = model.__class__.__name__.lower()
+        
+        if hasattr(model, 'features') and hasattr(model, 'classifier'):
+            # VGG/AlexNet style models
+            self.logger.info(f"Extracting modules for features/classifier architecture")
+            ordered_modules = self._extract_features_classifier_model(model, layer_names)
+        elif hasattr(model, 'layer1') and hasattr(model, 'fc'):
+            # ResNet style models
+            self.logger.info(f"Extracting modules for ResNet-style architecture")
+            ordered_modules = self._extract_resnet_model(model, layer_names)
+        elif 'inception' in model_type:
+            # Inception style models
+            self.logger.info(f"Extracting modules for Inception-style architecture")
+            ordered_modules = self._extract_inception_model(model, layer_names)
+        else:
+            # Generic extraction
+            self.logger.info(f"Using generic module extraction")
+            ordered_modules = self._extract_generic_model(model, layer_names)
+        
+        return ordered_modules
+    
+    def _extract_features_classifier_model(self, model: nn.Module, layer_names: List[str]) -> List[Optional[nn.Module]]:
+        """Extract modules for models with features/classifier structure (VGG, AlexNet)."""
+        ordered_modules = []
+        features_modules = list(model.features.children())
+        classifier_modules = list(model.classifier.children()) if hasattr(model.classifier, 'children') else [model.classifier]
+        
+        # Add avgpool if it exists
+        has_avgpool = hasattr(model, 'avgpool')
+        
+        feature_idx = 0
+        classifier_idx = 0
+        avgpool_added = False
+        
+        for layer_name in layer_names:
+            if 'functional.' in layer_name:
+                ordered_modules.append(None)
+            elif 'features' in layer_name and feature_idx < len(features_modules):
+                ordered_modules.append(features_modules[feature_idx])
+                feature_idx += 1
+            elif 'avgpool' in layer_name and has_avgpool and not avgpool_added:
+                ordered_modules.append(model.avgpool)
+                avgpool_added = True
+            elif 'classifier' in layer_name and classifier_idx < len(classifier_modules):
+                ordered_modules.append(classifier_modules[classifier_idx])
+                classifier_idx += 1
+            else:
+                # Try to find by name
+                found = False
+                for name, module in model.named_modules():
+                    if name == layer_name or name.endswith('.' + layer_name):
+                        ordered_modules.append(module)
+                        found = True
+                        break
+                if not found:
+                    self.logger.warning(f"Could not find module for layer: {layer_name}")
+                    ordered_modules.append(None)
+        
+        return ordered_modules
+    
+    def _extract_resnet_model(self, model: nn.Module, layer_names: List[str]) -> List[Optional[nn.Module]]:
+        """Extract modules for ResNet-style models."""
+        ordered_modules = []
+        
+        # Build a mapping of all modules
+        module_dict = {name: module for name, module in model.named_modules()}
+        
+        for layer_name in layer_names:
+            if 'functional.' in layer_name:
+                ordered_modules.append(None)
+            else:
+                # Try exact match first
+                if layer_name in module_dict:
+                    module = module_dict[layer_name]
+                    # Only add leaf modules
+                    if len(list(module.children())) == 0:
+                        ordered_modules.append(module)
+                    else:
+                        # For container modules, we skip them as they're not actual computation
+                        ordered_modules.append(None)
+                else:
+                    # Try to find a matching module
+                    found = False
+                    for name, module in module_dict.items():
+                        if name.endswith('.' + layer_name) or name.endswith(layer_name):
+                            if len(list(module.children())) == 0:
+                                ordered_modules.append(module)
+                                found = True
+                                break
+                    if not found:
+                        self.logger.warning(f"Could not find module for layer: {layer_name}")
+                        ordered_modules.append(None)
+        
+        return ordered_modules
+    
+    def _extract_inception_model(self, model: nn.Module, layer_names: List[str]) -> List[Optional[nn.Module]]:
+        """Extract modules for Inception-style models."""
+        ordered_modules = []
+        module_dict = {name: module for name, module in model.named_modules()}
+        
+        for layer_name in layer_names:
+            if 'functional.' in layer_name:
+                ordered_modules.append(None)
+            else:
+                # Inception has complex nested structure
+                if layer_name in module_dict:
+                    module = module_dict[layer_name]
+                    if len(list(module.children())) == 0:
+                        ordered_modules.append(module)
+                    else:
+                        ordered_modules.append(None)
+                else:
+                    # Try partial matching
+                    found = False
+                    for name, module in module_dict.items():
+                        if layer_name in name and len(list(module.children())) == 0:
+                            ordered_modules.append(module)
+                            found = True
+                            break
+                    if not found:
+                        ordered_modules.append(None)
+        
+        return ordered_modules
+    
+    def _extract_generic_model(self, model: nn.Module, layer_names: List[str]) -> List[Optional[nn.Module]]:
+        """Generic module extraction for unknown architectures."""
+        ordered_modules = []
+        all_modules = list(model.modules())
+        module_dict = {name: module for name, module in model.named_modules()}
+        
+        for layer_name in layer_names:
+            if 'functional.' in layer_name:
+                ordered_modules.append(None)
+            elif layer_name in module_dict:
+                module = module_dict[layer_name]
+                if len(list(module.children())) == 0:
+                    ordered_modules.append(module)
+                else:
+                    ordered_modules.append(None)
+            else:
+                ordered_modules.append(None)
+        
+        return ordered_modules
+
     def _analyze_model_structure(self, model: nn.Module) -> Dict[str, Any]:
         """Analyze model structure to identify architectural boundaries."""
         structure = {
@@ -791,48 +952,9 @@ class IntelligentSplitter:
         if not shard_modules:
             return nn.Sequential()  # Empty sequential for empty shards
         
-        # Check if this shard needs explicit pooling and flattening for features→classifier transition
-        needs_explicit_transition = self._shard_needs_explicit_transition(layer_indices, layer_names)
-        
-        if needs_explicit_transition:
-            # Create a new module list with explicit transition layers inserted
-            enhanced_modules = []
-            
-            # Add all feature layers first
-            feature_modules = []
-            classifier_modules = []
-            
-            for i, module in enumerate(shard_modules):
-                layer_idx = layer_indices[i] if i < len(layer_indices) else -1
-                layer_name = layer_names[layer_idx] if layer_idx < len(layer_names) else ""
-                
-                if 'features' in layer_name:
-                    feature_modules.append(module)
-                elif 'classifier' in layer_name:
-                    classifier_modules.append(module)
-                else:
-                    # Other modules go to features by default
-                    feature_modules.append(module)
-            
-            # Add feature modules
-            enhanced_modules.extend(feature_modules)
-            
-            # Add explicit transition layers if we have both features and classifier
-            if feature_modules and classifier_modules:
-                self.logger.info(f"Shard {shard_idx}: Adding explicit AdaptiveAvgPool2d and Flatten for features→classifier transition")
-                enhanced_modules.append(nn.AdaptiveAvgPool2d((1, 1)))
-                enhanced_modules.append(nn.Flatten())
-            
-            # Add classifier modules
-            enhanced_modules.extend(classifier_modules)
-            
-            if enhanced_modules:
-                return nn.Sequential(*enhanced_modules)
-            else:
-                return nn.Sequential(*shard_modules)
-        else:
-            return ShardWithTransitions(shard_modules, shard_idx, total_shards, 
-                                      model_structure, layer_indices, layer_names)
+        # For simple cases, just wrap in Sequential
+        # The more complex ShardWithTransitions is causing issues
+        return nn.Sequential(*shard_modules)
     
     def _shard_needs_explicit_transition(self, layer_indices: List[int], layer_names: List[str]) -> bool:
         """Check if this shard contains features→classifier transition and needs explicit layers."""
@@ -853,6 +975,123 @@ class IntelligentSplitter:
         # Return True if this shard contains both features and classifier layers
         return has_features and has_classifier
 
+
+def create_simple_model_split(model: nn.Module, model_type: str, num_splits: int = 1) -> List[nn.Module]:
+    """
+    Create a simple but working split for models based on their architecture.
+    This is a fallback when intelligent splitting fails.
+    """
+    if num_splits != 1:
+        raise ValueError("Currently only supports num_splits=1 (creates 2 shards)")
+    
+    model_type = model_type.lower()
+    
+    # ResNet models
+    if 'resnet' in model_type:
+        # Split between layer2 and layer3
+        shard1 = nn.Sequential(
+            model.conv1,
+            model.bn1,
+            model.relu,
+            model.maxpool,
+            model.layer1,
+            model.layer2
+        )
+        shard2 = nn.Sequential(
+            model.layer3,
+            model.layer4,
+            model.avgpool,
+            nn.Flatten(),
+            model.fc
+        )
+        return [shard1, shard2]
+    
+    # VGG models
+    elif 'vgg' in model_type:
+        features = list(model.features.children())
+        # Find split point after a pooling layer
+        split_idx = len(features) // 2
+        for i in range(split_idx, len(features)):
+            if isinstance(features[i], nn.MaxPool2d):
+                split_idx = i + 1
+                break
+        
+        shard1 = nn.Sequential(*features[:split_idx])
+        shard2 = nn.Sequential(
+            *features[split_idx:],
+            model.avgpool,
+            nn.Flatten(),
+            model.classifier
+        )
+        return [shard1, shard2]
+    
+    # AlexNet
+    elif 'alexnet' in model_type:
+        shard1 = model.features
+        shard2 = nn.Sequential(
+            model.avgpool,
+            nn.Flatten(),
+            model.classifier
+        )
+        return [shard1, shard2]
+    
+    # Inception models
+    elif 'inception' in model_type:
+        # This is more complex, collect modules
+        modules = []
+        mixed_modules = []
+        
+        for name, module in model.named_children():
+            if name.startswith('Mixed'):
+                mixed_modules.append(module)
+            else:
+                modules.append((name, module))
+        
+        # Split mixed modules in half
+        if mixed_modules:
+            split_point = len(mixed_modules) // 2
+            
+            # First shard: initial modules + first half of Mixed
+            shard1_modules = []
+            for name, mod in modules:
+                if name in ['Conv2d_1a_3x3', 'Conv2d_2a_3x3', 'Conv2d_2b_3x3', 
+                           'Conv2d_3b_1x1', 'Conv2d_4a_3x3', 'maxpool1', 'maxpool2']:
+                    shard1_modules.append(mod)
+            shard1_modules.extend(mixed_modules[:split_point])
+            
+            # Second shard: remaining Mixed + final layers
+            shard2_modules = mixed_modules[split_point:]
+            for name, mod in modules:
+                if name in ['avgpool', 'dropout', 'fc']:
+                    if name == 'avgpool':
+                        shard2_modules.append(nn.AdaptiveAvgPool2d((1, 1)))
+                    elif name == 'fc':
+                        shard2_modules.append(nn.Flatten())
+                        shard2_modules.append(mod)
+                    else:
+                        shard2_modules.append(mod)
+            
+            shard1 = nn.Sequential(*shard1_modules)
+            shard2 = nn.Sequential(*shard2_modules)
+            return [shard1, shard2]
+    
+    # MobileNetV2
+    elif 'mobilenet' in model_type:
+        features = list(model.features.children())
+        split_point = len(features) // 2
+        
+        shard1 = nn.Sequential(*features[:split_point])
+        shard2 = nn.Sequential(
+            *features[split_point:],
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
+            model.classifier
+        )
+        return [shard1, shard2]
+    
+    # Fallback - just return the whole model
+    else:
+        raise ValueError(f"Unsupported model type for simple splitting: {model_type}")
 
 def split_model_intelligently(model: nn.Module, profile: ModelProfile, 
                             num_splits: int, device_capabilities: Optional[Dict[str, Any]] = None,

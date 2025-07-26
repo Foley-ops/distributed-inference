@@ -60,18 +60,37 @@ class ModelSplitter:
             profiler = LayerProfiler(device="cpu", warmup_iterations=2, profile_iterations=5)
             profile = profiler.profile_model(model, sample_input, model_type)
             
-            shards, split_config = split_model_intelligently(
-                model, profile, num_splits,
-                network_config={
-                    'communication_latency_ms': 200.0,
-                    'network_bandwidth_mbps': 3.5
+            # Force use of simple fallback for now since intelligent splitting is broken
+            force_simple_fallback = True
+            
+            if force_simple_fallback and model_type.lower() != 'mobilenetv2':
+                logger.info("Using simple fallback splitting (forced)")
+                from profiling.intelligent_splitter import create_simple_model_split
+                shards = create_simple_model_split(model, model_type, num_splits)
+                split_config = None
+            else:
+                try:
+                    shards, split_config = split_model_intelligently(
+                        model, profile, num_splits,
+                        network_config={
+                            'communication_latency_ms': 200.0,
+                            'network_bandwidth_mbps': 3.5
+                        }
+                    )
+                except Exception as e:
+                    logger.warning(f"Intelligent splitting failed: {e}")
+                    logger.info("Falling back to simple splitting")
+                    from profiling.intelligent_splitter import create_simple_model_split
+                    shards = create_simple_model_split(model, model_type, num_splits)
+                    split_config = None
+            if split_config is not None:
+                metadata['split_type'] = 'intelligent'
+                metadata['split_config'] = {
+                    'load_balance_score': split_config.load_balance_score,
+                    'communication_overhead_ms': split_config.estimated_communication_overhead_ms
                 }
-            )
-            metadata['split_type'] = 'intelligent'
-            metadata['split_config'] = {
-                'load_balance_score': split_config.load_balance_score,
-                'communication_overhead_ms': split_config.estimated_communication_overhead_ms
-            }
+            else:
+                metadata['split_type'] = 'simple_fallback'
         
         # Save each shard
         for i, shard in enumerate(shards):
