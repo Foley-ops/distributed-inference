@@ -52,11 +52,11 @@ class AutomatedSplitTester:
 
         # Kill on Pi nodes
         for rank, host in self.pi_hosts.items():
-            full_host = f"{host}"
+            full_host = f"{self.pi_user}@{host}"  # Fixed: include username
             subprocess.run(["ssh", full_host, "pkill -f distributed_runner.py"],
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        time.sleep(5)  # Wait for processes to die
+        time.sleep(5)  # Wait for processes to die  # Wait for processes to die
 
     def start_worker(self, rank: int, world_size: int = 3, model: str = "mobilenetv2",
                     batch_size: int = 8, num_samples: int = 100, split_block: int = 0) -> bool:
