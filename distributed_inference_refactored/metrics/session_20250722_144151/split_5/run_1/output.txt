@@ -1,1 +1,0 @@
-2025-07-22 14:42:00,462 - INFO - Started real-time monitoring for PlamaLV_rank_0

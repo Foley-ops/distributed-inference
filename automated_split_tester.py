@@ -145,8 +145,10 @@ class AutomatedSplitTester:
         if metrics_dir is None:
             metrics_dir = f"./metrics_split{split_block}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+        # Use absolute path to avoid working directory issues
+        distributed_runner_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "distributed_runner.py")
         cmd = [
-            "python3", "-u", "distributed_runner.py",
+            "python3", "-u", distributed_runner_path,
             "--rank", "0",
             "--world-size", str(world_size),
             "--model", model,
@@ -185,6 +187,7 @@ class AutomatedSplitTester:
                     cmd,
                     stdout=f,
                     stderr=subprocess.STDOUT,
+                    cwd=os.path.dirname(os.path.abspath(__file__)),  # Ensure correct working directory
                     timeout=600  # 10 minute timeout
                 )
 

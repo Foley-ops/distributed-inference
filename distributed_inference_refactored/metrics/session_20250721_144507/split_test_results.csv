@@ -1,2 +1,0 @@
-split_block,run,status,start_time,end_time,output_file,error
-0,1,failed,2025-07-21 14:45:07,2025-07-21 14:50:45,./metrics/session_20250721_144507/split_0/run_1/output.txt,

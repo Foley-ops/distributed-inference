@@ -1,8 +1,0 @@
-split_block,run,status,start_time,end_time,output_file,error
-0,1,success,2025-07-19 17:12:17,2025-07-19 17:13:36,./metrics/session_20250719_171217/split_0/run_1/output.txt,
-0,2,success,2025-07-19 17:13:41,2025-07-19 17:15:03,./metrics/session_20250719_171217/split_0/run_2/output.txt,
-0,3,success,2025-07-19 17:15:08,2025-07-19 17:16:29,./metrics/session_20250719_171217/split_0/run_3/output.txt,
-0,4,success,2025-07-19 17:16:34,2025-07-19 17:17:56,./metrics/session_20250719_171217/split_0/run_4/output.txt,
-0,5,success,2025-07-19 17:18:01,2025-07-19 17:19:22,./metrics/session_20250719_171217/split_0/run_5/output.txt,
-1,1,success,2025-07-19 17:19:27,2025-07-19 17:20:50,./metrics/session_20250719_171217/split_1/run_1/output.txt,
-1,2,success,2025-07-19 17:20:55,2025-07-19 17:22:18,./metrics/session_20250719_171217/split_1/run_2/output.txt,
