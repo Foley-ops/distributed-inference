@@ -8,6 +8,7 @@ import subprocess
 import time
 import os
 import sys
+from distributed_runner import finalize_worker_metrics
 import logging
 from datetime import datetime
 from typing import List, Dict, Tuple, Optional
@@ -309,7 +310,10 @@ class AutomatedSplitTester:
     
     def _copy_worker_metrics(self, metrics_dir: str):
         """Copy worker metrics files from Pi machines to local metrics directory."""
-        logger.info("Copying worker metrics files...")
+        logger.info("Finalizing and copying worker metrics files...")
+        
+        # First, finalize worker metrics via RPC to ensure CSV files are written
+        self._finalize_worker_metrics()
         
         for rank, host in self.pi_hosts.items():
             full_host = f"{self.pi_user}@{host}"
@@ -345,6 +349,38 @@ class AutomatedSplitTester:
                     
             except Exception as e:
                 logger.warning(f"Error copying metrics from worker {rank}: {e}")
+
+    def _finalize_worker_metrics(self):
+        """Finalize worker metrics via RPC to ensure CSV files are written."""
+        logger.info("Finalizing worker metrics via RPC...")
+        
+        try:
+            import torch.distributed.rpc as rpc
+            
+            for rank, host in self.pi_hosts.items():
+                worker_name = f"worker{rank}"
+                
+                try:
+                    logger.info(f"Calling finalize_worker_metrics on {worker_name}")
+                    success = rpc.rpc_sync(
+                        worker_name,
+                        finalize_worker_metrics,
+                        args=("resnet18",),  # Model name
+                        timeout=30
+                    )
+                    
+                    if success:
+                        logger.info(f"Successfully finalized metrics on {worker_name}")
+                    else:
+                        logger.warning(f"Failed to finalize metrics on {worker_name}")
+                        
+                except Exception as e:
+                    logger.warning(f"RPC call to finalize metrics on {worker_name} failed: {e}")
+                    
+        except ImportError:
+            logger.warning("torch.distributed.rpc not available, skipping worker metrics finalization")
+        except Exception as e:
+            logger.warning(f"Error during worker metrics finalization: {e}")
 
 
 

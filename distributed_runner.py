@@ -967,6 +967,14 @@ def collect_worker_summary(model_name: str, batch_size: int, num_parameters: int
         return global_metrics_collector.get_device_summary()
     return {}
 
+def finalize_worker_metrics(model_name: str) -> bool:
+    """RPC function to finalize worker metrics and write to CSV."""
+    global global_metrics_collector
+    if global_metrics_collector:
+        global_metrics_collector.finalize(model_name)
+        return True
+    return False
+
 
 def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_size: int,
                           num_classes: int, dataset: str, num_test_samples: int,
