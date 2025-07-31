@@ -80,7 +80,14 @@ class AutomatedSplitTester:
         
         # Add metrics directory if provided
         if metrics_dir:
-            worker_cmd += f"--metrics-dir {metrics_dir} "
+            # Convert local metrics_dir to remote path relative to project directory
+            # metrics_dir is like ./metrics/session_*/split_*/run_*/metrics
+            if metrics_dir.startswith("./"):
+                remote_metrics_dir = os.path.join(self.project_path, metrics_dir[2:])
+            else:
+                # For absolute paths, we need to make them relative to the remote project
+                remote_metrics_dir = metrics_dir
+            worker_cmd += f"--metrics-dir {remote_metrics_dir} "
             
         worker_cmd += f"> worker{rank}.log 2>&1 &"
 
@@ -309,7 +316,7 @@ class AutomatedSplitTester:
     
     def _copy_worker_metrics(self, metrics_dir: str):
         """Copy worker metrics files from Pi machines to local metrics directory."""
-        logger.info("Copying worker metrics files...")
+        logger.info(f"Copying worker metrics files from remote workers to {metrics_dir}...")
         
         
         for rank, host in self.pi_hosts.items():
@@ -318,8 +325,15 @@ class AutomatedSplitTester:
             try:
                 # Workers save to the session-specific directory passed via --metrics-dir
                 # The metrics_dir parameter contains the local path, we need the corresponding remote path
-                remote_metrics_dir = metrics_dir.replace(os.path.expanduser("~"), self.project_path)
+                if metrics_dir.startswith("./"):
+                    # Expand the tilde in project_path for the remote command
+                    expanded_project_path = self.project_path.replace("~", f"/home/{self.pi_user}")
+                    remote_metrics_dir = os.path.join(expanded_project_path, metrics_dir[2:])
+                else:
+                    # For absolute paths, assume they're the same on remote
+                    remote_metrics_dir = metrics_dir
                 find_cmd = f"ls -t {remote_metrics_dir}/device_metrics_*rank_{rank}_*.csv 2>/dev/null | head -1"
+                logger.info(f"Looking for worker {rank} metrics on {full_host} with command: {find_cmd}")
                 result = subprocess.run(
                     ["ssh", full_host, find_cmd],
                     capture_output=True,
@@ -330,6 +344,7 @@ class AutomatedSplitTester:
                 if result.returncode == 0 and result.stdout.strip():
                     remote_file = result.stdout.strip()
                     local_file = os.path.join(metrics_dir, os.path.basename(remote_file))
+                    logger.info(f"Found remote file: {remote_file}")
                     
                     # Copy the file
                     scp_result = subprocess.run(
@@ -344,7 +359,7 @@ class AutomatedSplitTester:
                     else:
                         logger.warning(f"Failed to copy worker {rank} metrics: {scp_result.stderr}")
                 else:
-                    logger.warning(f"No recent metrics file found for worker {rank}")
+                    logger.warning(f"No recent metrics file found for worker {rank}. SSH exit code: {result.returncode}, stderr: {result.stderr}")
                     
             except Exception as e:
                 logger.warning(f"Error copying metrics from worker {rank}: {e}")
