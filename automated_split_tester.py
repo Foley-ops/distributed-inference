@@ -247,6 +247,12 @@ class AutomatedSplitTester:
             output_file = f"output_split{split_block}_run{run_number}.log"
         start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        # Determine metrics directory for this run BEFORE starting workers
+        if session_dir:
+            metrics_dir = f"{run_dir}/metrics"
+        else:
+            metrics_dir = None
+
         # Kill existing processes
         self.kill_existing_processes()
 
@@ -278,12 +284,6 @@ class AutomatedSplitTester:
         #     return {"status": "failed", "error": "Worker 2 died"}
 
         logger.info("Workers should be ready, starting orchestrator...")
-
-        # Determine metrics directory for this run
-        if session_dir:
-            metrics_dir = f"{run_dir}/metrics"
-        else:
-            metrics_dir = None
 
         # Run orchestrator
         success = self.run_orchestrator(split_block, output_file=output_file,
