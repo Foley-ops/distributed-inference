@@ -1428,6 +1428,10 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             if enable_prefetch and 'test_loader' in locals() and hasattr(test_loader, 'stop'):
                 test_loader.stop()
                 logger.info("Stopped prefetch loader")
+                
+            # Finalize metrics BEFORE RPC shutdown to ensure worker metrics are accessible
+            logger.info("[MASTER] Finalizing metrics before RPC shutdown...")
+            metrics_collector.finalize(model_type)
 
             # RPC Cleanup - MOVED INSIDE FINALLY BLOCK
             if rpc_initialized:
@@ -1501,6 +1505,9 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
                 logger.info(f"[WORKER] Wait loop exited: {e}")
             logger.info("[WORKER] RPC agent no longer set, proceeding to cleanup")
 
+    # Finalize metrics BEFORE RPC shutdown to ensure worker metrics are accessible
+    final_results = metrics_collector.finalize(model_type)
+    
     # Cleanup
     if rpc_initialized:
         logger.info("[CLEANUP] ========== Starting RPC Shutdown ==========")
@@ -1514,9 +1521,6 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             logger.info(f"[CLEANUP] RPC shutdown completed successfully in {shutdown_time:.2f}s")
         except Exception as e:
             logger.error(f"[CLEANUP] Error during RPC shutdown: {e}", exc_info=True)
-
-    # Finalize metrics
-    final_results = metrics_collector.finalize(model_type)
 
     logger.info("=== Final Enhanced Metrics Summary ===")
     device_summary = final_results['device_summary']
