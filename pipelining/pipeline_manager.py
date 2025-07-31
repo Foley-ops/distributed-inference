@@ -472,6 +472,9 @@ class PipelineManager:
         if 0 in self.rpc_workers:
             worker_name, rpc_worker = self.rpc_workers[0]
             
+            # Calculate the input tensor size for the first stage (this is what we're sending)
+            input_tensor_size_mb = (data.numel() * data.element_size()) / (1024 * 1024)
+            
             # Track RPC start time
             rpc_start_time = time.time()
             batch.stage_times[0] = (rpc_start_time, None)
@@ -479,12 +482,12 @@ class PipelineManager:
             # Create future for first stage
             future = rpc_worker.rpc_async().process_batch_rpc(data, batch_id)
             
-            # Set up continuation for subsequent stages
-            self._setup_pipeline_continuation(future, batch_id, 0)
+            # Set up continuation for subsequent stages, passing the input tensor size
+            self._setup_pipeline_continuation(future, batch_id, 0, input_tensor_size_mb)
         
         return batch_id
     
-    def _setup_pipeline_continuation(self, future, batch_id: int, completed_stage: int):
+    def _setup_pipeline_continuation(self, future, batch_id: int, completed_stage: int, input_tensor_size_mb: float = 0.0):
         """Set up continuation for the next stage in the pipeline."""
         def continue_pipeline():
             try:
@@ -509,8 +512,8 @@ class PipelineManager:
                         # Calculate and log RPC timing
                         rpc_time_ms = (rpc_end_time - start_time) * 1000
                         
-                        # Estimate network time based on data size
-                        tensor_size_mb = (result.numel() * result.element_size()) / (1024 * 1024)
+                        # Use the INPUT tensor size that was sent (not the output)
+                        tensor_size_mb = input_tensor_size_mb
                         estimated_network_ms = 0.5 + (tensor_size_mb * 0.3) + (tensor_size_mb * 8 / 940) * 1000 * 2
                         
                         # Log timing information
@@ -523,14 +526,17 @@ class PipelineManager:
                         # Start next stage
                         worker_name, rpc_worker = self.rpc_workers[next_stage]
                         
+                        # Calculate the input tensor size for the next stage (this is what we're sending)
+                        next_input_tensor_size_mb = (result.numel() * result.element_size()) / (1024 * 1024)
+                        
                         # Track RPC start time for network timing
                         rpc_start_time = time.time()
                         batch.stage_times[next_stage] = (rpc_start_time, None)  # Start time for next stage
                         
                         next_future = rpc_worker.rpc_async().process_batch_rpc(result, batch_id)
                         
-                        # Set up continuation for next stage
-                        self._setup_pipeline_continuation(next_future, batch_id, next_stage)
+                        # Set up continuation for next stage, passing the input size
+                        self._setup_pipeline_continuation(next_future, batch_id, next_stage, next_input_tensor_size_mb)
                     else:
                         # Pipeline complete
                         batch.completed = True
