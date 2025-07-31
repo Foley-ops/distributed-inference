@@ -316,7 +316,7 @@ class AutomatedSplitTester:
             
             try:
                 # Find the most recent device_metrics file for this worker
-                find_cmd = f"find {self.project_path}/metrics -name 'device_metrics_*rank_{rank}_*.csv' -type f -printf '%T@ %p\n' |                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"|                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"|                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"
+                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"
                 result = subprocess.run(
                     ["ssh", full_host, find_cmd],
                     capture_output=True,
