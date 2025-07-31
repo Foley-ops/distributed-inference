@@ -284,13 +284,17 @@ class AutomatedSplitTester:
         #     return {"status": "failed", "error": "Worker 2 died"}
 
         logger.info("Workers should be ready, starting orchestrator...")
-
-        # Run orchestrator
+        
+        # Run orchestrator first
         success = self.run_orchestrator(split_block, output_file=output_file,
                                        use_pipelining=use_pipelining,
                                        metrics_dir=metrics_dir,
                                        use_optimizations=True,
                                        model=model)
+        
+        # After orchestrator completes, copy worker metrics files if they exist
+        if success and metrics_dir:
+            self._copy_worker_metrics(metrics_dir)
 
         end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -302,6 +306,47 @@ class AutomatedSplitTester:
             "end_time": end_time,
             "output_file": output_file
         }
+    
+    def _copy_worker_metrics(self, metrics_dir: str):
+        """Copy worker metrics files from Pi machines to local metrics directory."""
+        logger.info("Copying worker metrics files...")
+        
+        for rank, host in self.pi_hosts.items():
+            full_host = f"{self.pi_user}@{host}"
+            
+            try:
+                # Find the most recent device_metrics file for this worker
+                find_cmd = f"find {self.project_path}/metrics -name 'device_metrics_*rank_{rank}_*.csv' -type f -printf '%T@ %p\n' |                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"|                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"|                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"
+                result = subprocess.run(
+                    ["ssh", full_host, find_cmd],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    remote_file = result.stdout.strip()
+                    local_file = os.path.join(metrics_dir, os.path.basename(remote_file))
+                    
+                    # Copy the file
+                    scp_result = subprocess.run(
+                        ["scp", f"{full_host}:{remote_file}", local_file],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+                    
+                    if scp_result.returncode == 0:
+                        logger.info(f"Copied worker {rank} metrics: {os.path.basename(remote_file)}")
+                    else:
+                        logger.warning(f"Failed to copy worker {rank} metrics: {scp_result.stderr}")
+                else:
+                    logger.warning(f"No recent metrics file found for worker {rank}")
+                    
+            except Exception as e:
+                logger.warning(f"Error copying metrics from worker {rank}: {e}")
+
+
 
     def test_all_splits(self, split_blocks: List[int] = None,
                        runs_per_split: int = 3,
