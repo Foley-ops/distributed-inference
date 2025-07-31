@@ -1348,6 +1348,20 @@ def run_enhanced_inference(rank: int, world_size: int, model_type: str, batch_si
             actual_latency_ms = (elapsed_time * 1000.0) / total_images if total_images > 0 else 0.0
             logger.info(f"Actual per-image latency: {actual_latency_ms:.2f}ms")
 
+            # Finalize worker metrics BEFORE collecting summaries
+            logger.info("Finalizing worker metrics via RPC...")
+            for i in range(1, world_size):
+                worker_name = f"worker{i}"
+                try:
+                    logger.info(f"Calling finalize_worker_metrics on {worker_name}")
+                    success = rpc.rpc_sync(worker_name, finalize_worker_metrics, args=(model_type,), timeout=30)
+                    if success:
+                        logger.info(f"Successfully finalized metrics on {worker_name}")
+                    else:
+                        logger.warning(f"Failed to finalize metrics on {worker_name}")
+                except Exception as e:
+                    logger.warning(f"RPC call to finalize metrics on {worker_name} failed: {e}")
+
             # Collect worker summaries
             logger.info("Collecting enhanced metrics from workers...")
             worker_summaries = []
