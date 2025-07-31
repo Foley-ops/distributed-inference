@@ -239,7 +239,15 @@ class DistributedPipelineWorker:
             compute_start = time.time()
             with torch.no_grad():
                 batch_data = batch_data.to("cpu")
-                output = self.shard_module(batch_data)
+                
+                # Use payload measurement method if available, otherwise fall back to direct call
+                if hasattr(self.shard_module, 'forward_with_payload_measurement'):
+                    self.logger.info(f"[PIPELINE] Using payload measurement for shard {self.stage_id}")
+                    output = self.shard_module.forward_with_payload_measurement(batch_data, batch_id)
+                else:
+                    self.logger.info(f"[PIPELINE] Using direct shard call for shard {self.stage_id}")
+                    output = self.shard_module(batch_data)
+                    
                 result = output.cpu()
             compute_end = time.time()
             
