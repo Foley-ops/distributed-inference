@@ -855,6 +855,10 @@ class EnhancedDistributedModel(nn.Module):
             # Log tensor details before RPC
             self.logger.info(f"[FORWARD SEQUENTIAL] Sending tensor shape {current_tensor.shape} to shard {i}")
 
+            # Measure actual payload size BEFORE sending (fix for tensor_size_mb=0.00 bug)
+            payload_size_bytes = PayloadMeasurer.measure_torch_serialization_size(current_tensor)
+            tensor_size_mb = payload_size_bytes / (1024 * 1024)
+
             # Measure RPC latency (includes computation)
             start_time = time.time()
             self.logger.info(f"[FORWARD SEQUENTIAL] Making RPC call to shard {i}")
@@ -871,9 +875,7 @@ class EnhancedDistributedModel(nn.Module):
             if self.metrics_collector:
                 rpc_total_ms = (end_time - start_time) * 1000
 
-                # Estimate network overhead (serialization + transfer)
-                # Based on analysis: ~14ms for 0.77MB on gigabit network
-                tensor_size_mb = (current_tensor.numel() * current_tensor.element_size()) / (1024 * 1024)
+                # Use the payload size measured before sending
                 estimated_network_ms = 0.5 + (tensor_size_mb * 0.3) + (tensor_size_mb * 8 / 940) * 1000 * 2  # RTT + serialize + transfer
 
                 # The rest is computation time
