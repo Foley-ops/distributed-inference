@@ -308,8 +308,8 @@ class AutomatedSplitTester:
         }
     
     def _copy_worker_metrics(self, metrics_dir: str):
-        \"\"\"Copy worker metrics files from Pi machines to local metrics directory.\"\"\"
-        logger.info(\"Copying worker metrics files...\")
+        """Copy worker metrics files from Pi machines to local metrics directory."""
+        logger.info("Copying worker metrics files...")
         
         
         for rank, host in self.pi_hosts.items():
