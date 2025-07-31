@@ -37,6 +37,7 @@ from profiling import LayerProfiler, IntelligentSplitter, split_model_intelligen
 from metrics import EnhancedMetricsCollector
 from pipelining import PipelineManager, DistributedPipelineWorker
 from core import ModelLoader
+from utils.payload_measurement import PayloadMeasurer
 
 
 # Configure logging
@@ -95,6 +96,13 @@ class EnhancedShardWrapper(nn.Module):
 
         logging.info(f"[{socket.gethostname()}] Shard {self.shard_id} completed: {output.shape}")
         return output
+
+    def forward_with_payload_measurement(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
+        """Forward pass with payload measurement."""
+        payload_size_bytes = PayloadMeasurer.measure_torch_serialization_size(x)
+        payload_size_mb = payload_size_bytes / (1024 * 1024)
+        logging.info(f"[PAYLOAD_MEASUREMENT] shard_{self.shard_id} input_payload_size_mb={payload_size_mb:.2f} batch_id={batch_id}")
+        return self.forward(x, batch_id)
 
     def parameter_rrefs(self):
         """Get parameter RRefs for distributed training (if needed)."""
@@ -303,6 +311,13 @@ class LocalLoadingShardWrapper(nn.Module):
 
         logger.info(f"[FORWARD PASS] [{socket.gethostname()}] Shard {self.shard_id} returning output shape: {output.shape}")
         return output
+
+    def forward_with_payload_measurement(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
+        """Forward pass with payload measurement."""
+        payload_size_bytes = PayloadMeasurer.measure_torch_serialization_size(x)
+        payload_size_mb = payload_size_bytes / (1024 * 1024)
+        logging.info(f"[PAYLOAD_MEASUREMENT] shard_{self.shard_id} input_payload_size_mb={payload_size_mb:.2f} batch_id={batch_id}")
+        return self.forward(x, batch_id)
 
     def parameter_rrefs(self):
         """Get parameter RRefs for distributed training (if needed)."""
@@ -815,7 +830,7 @@ class EnhancedDistributedModel(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
-        """Forward pass through the distributed model."""
+        """Forward pass through the distributed model with payload measurement."""
         self.logger.info(f"[MODEL FORWARD] Called with input shape: {x.shape}, batch_id: {batch_id}")
 
         if self.use_pipelining and self.pipeline_manager:
@@ -823,9 +838,9 @@ class EnhancedDistributedModel(nn.Module):
             self.logger.info("[MODEL FORWARD] Using pipelined execution path")
             return self.pipeline_manager.process_batch_rpc_pipelined(x)
         else:
-            # Sequential execution (original approach)
-            self.logger.info("[MODEL FORWARD] Using sequential execution path")
-            return self._forward_sequential(x, batch_id)
+            # Sequential execution with payload measurement (research-grade accuracy)
+            self.logger.info("[MODEL FORWARD] Using sequential execution path with payload measurement")  
+            return self._forward_sequential_with_payload_measurement(x, batch_id)
 
     def _forward_sequential(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
         """Sequential forward pass (non-pipelined)."""
@@ -876,6 +891,60 @@ class EnhancedDistributedModel(nn.Module):
                 self.metrics_collector.record_network_metrics(rpc_total_ms, estimated_network_ms)
 
         self.logger.info(f"[FORWARD SEQUENTIAL] Sequential forward pass complete, output shape: {current_tensor.shape}")
+        return current_tensor
+
+    def _forward_sequential_with_payload_measurement(self, x: torch.Tensor, batch_id: Optional[int] = None) -> torch.Tensor:
+        """Sequential forward pass with actual payload measurement (research-grade accuracy)."""
+        self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Starting sequential forward pass with payload measurement, batch_id={batch_id}")
+        self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Input tensor shape: {x.shape}")
+
+        current_tensor = x
+
+        for i, shard_rref in enumerate(self.worker_rrefs):
+            self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Processing shard {i}")
+            
+            # Measure actual payload size BEFORE sending (this is the fix!)
+            payload_size_bytes = PayloadMeasurer.measure_torch_serialization_size(current_tensor)
+            payload_size_mb = payload_size_bytes / (1024 * 1024)
+            self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Actual payload size for shard {i}: {payload_size_mb:.2f}MB")
+
+            # Measure RPC latency (includes computation)
+            start_time = time.time()
+            self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Making RPC call to shard {i}")
+
+            current_tensor = shard_rref.rpc_sync().forward_with_payload_measurement(current_tensor, batch_id=batch_id)
+
+            end_time = time.time()
+            rpc_time = (end_time - start_time) * 1000  # Convert to ms
+
+            self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] RPC call to shard {i} completed in {rpc_time:.2f}ms")
+            self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Received tensor shape from shard {i}: {current_tensor.shape}")
+
+            # Record RPC metrics with actual payload measurement
+            if self.metrics_collector:
+                rpc_total_ms = (end_time - start_time) * 1000
+                
+                # Calculate network throughput using actual payload size
+                network_throughput_mbps = PayloadMeasurer.calculate_network_throughput_mbps(payload_size_mb, rpc_total_ms/1000.0)
+                
+                # Estimate network overhead using actual payload size
+                estimated_network_ms = 0.5 + (payload_size_mb * 0.3) + (payload_size_mb * 8 / 940) * 1000 * 2  # RTT + serialize + transfer
+                estimated_computation_ms = max(0, rpc_total_ms - estimated_network_ms)
+
+                self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Shard {i} metrics: "
+                               f"RPC total={rpc_total_ms:.2f}ms, "
+                               f"Actual payload={payload_size_mb:.2f}MB, "
+                               f"Network throughput={network_throughput_mbps:.2f}Mbps, "
+                               f"Est. network={estimated_network_ms:.2f}ms, "
+                               f"Est. computation={estimated_computation_ms:.2f}ms")
+
+                # Fixed parseable format with actual payload size (this fixes the 0.00 bug!)
+                self.logger.info(f"[NETWORK_TIMING] shard_{i} network_time_ms={estimated_network_ms:.2f} tensor_size_mb={payload_size_mb:.2f} batch_id={batch_id}")
+
+                # Record network metrics
+                self.metrics_collector.record_network_metrics(rpc_total_ms, estimated_network_ms)
+
+        self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Sequential forward pass complete, output shape: {current_tensor.shape}")
         return current_tensor
 
     def parameter_rrefs(self):
