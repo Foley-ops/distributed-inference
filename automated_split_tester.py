@@ -59,7 +59,8 @@ class AutomatedSplitTester:
         time.sleep(5)  # Wait for processes to die  # Wait for processes to die
 
     def start_worker(self, rank: int, world_size: int = 3, model: str = "mobilenetv2",
-                    batch_size: int = 8, num_samples: int = 100, split_block: int = 0) -> bool:
+                    batch_size: int = 8, num_samples: int = 100, split_block: int = 0, 
+                    metrics_dir: str = None) -> bool:
         """Start a worker on a Pi node."""
         host = self.pi_hosts[rank]
         full_host = f"{self.pi_user}@{host}"
@@ -75,8 +76,13 @@ class AutomatedSplitTester:
             f"--num-test-samples {num_samples} --dataset cifar10 "
             f"--split-block {split_block} "
             f"--shards-dir {self.shards_dir} "
-            f"> worker{rank}.log 2>&1 &"
         )
+        
+        # Add metrics directory if provided
+        if metrics_dir:
+            worker_cmd += f"--metrics-dir {metrics_dir} "
+            
+        worker_cmd += f"> worker{rank}.log 2>&1 &"
 
         logger.info(f"Starting worker {rank} on {host}...")
 
@@ -245,12 +251,12 @@ class AutomatedSplitTester:
         self.kill_existing_processes()
 
         # Start workers
-        self.start_worker(1, split_block=split_block, model=model)
+        self.start_worker(1, split_block=split_block, model=model, metrics_dir=metrics_dir)
         logger.info("Worker 1 start command sent")
 
         time.sleep(3)
 
-        self.start_worker(2, split_block=split_block, model=model)
+        self.start_worker(2, split_block=split_block, model=model, metrics_dir=metrics_dir)
         logger.info("Worker 2 start command sent")
 
         # Wait for workers to be ready
@@ -419,6 +425,11 @@ class AutomatedSplitTester:
                 'end_to_end_latency_s': None,
                 'intermediate_data_size_bytes': None,
                 'network_throughput_mbps': None
+            },
+            'worker_metrics': {
+                'rank0': {'avg_cpu_usage_percent': None, 'avg_memory_usage_mb': None},
+                'rank1': {'avg_cpu_usage_percent': None, 'avg_memory_usage_mb': None},
+                'rank2': {'avg_cpu_usage_percent': None, 'avg_memory_usage_mb': None}
             }
         }
 
@@ -464,6 +475,52 @@ class AutomatedSplitTester:
             # Get the directory of the output file
             output_dir = os.path.dirname(output_file)
             metrics_dir = os.path.join(output_dir, 'metrics')
+
+            # Extract CPU and memory usage from device_metrics CSV files
+            if os.path.exists(metrics_dir):
+                device_csv_files = glob_module.glob(f"{metrics_dir}/device_metrics_*.csv")
+                if device_csv_files:
+                    try:
+                        import csv
+                        # Process all device metrics files to get per-worker data
+                        for device_csv_file in device_csv_files:
+                            with open(device_csv_file, 'r') as csvfile:
+                                reader = csv.DictReader(csvfile)
+                                for row in reader:
+                                    # Extract rank from device_id or hostname
+                                    device_id = row.get('device_id', '')
+                                    hostname = row.get('hostname', '')
+                                    rank = row.get('rank', '')
+                                    
+                                    # Determine which worker this is
+                                    worker_key = None
+                                    if 'rank_0' in device_id or rank == '0':
+                                        worker_key = 'rank0'
+                                    elif 'rank_1' in device_id or rank == '1':
+                                        worker_key = 'rank1'  
+                                    elif 'rank_2' in device_id or rank == '2':
+                                        worker_key = 'rank2'
+                                    elif 'master' in hostname.lower() or 'master' in device_id.lower():
+                                        worker_key = 'rank1'  # Master-pi is usually rank1
+                                    elif 'core' in hostname.lower() or 'core' in device_id.lower():
+                                        worker_key = 'rank2'  # Core-pi is usually rank2
+                                    
+                                    if worker_key and worker_key in metrics['worker_metrics']:
+                                        if 'avg_cpu_usage_percent' in row and row['avg_cpu_usage_percent']:
+                                            metrics['worker_metrics'][worker_key]['avg_cpu_usage_percent'] = float(row['avg_cpu_usage_percent'])
+                                        if 'avg_memory_usage_mb' in row and row['avg_memory_usage_mb']:
+                                            metrics['worker_metrics'][worker_key]['avg_memory_usage_mb'] = float(row['avg_memory_usage_mb'])
+                                        logger.info(f"Extracted {worker_key} metrics: CPU={row.get('avg_cpu_usage_percent', 'N/A')}%, Memory={row.get('avg_memory_usage_mb', 'N/A')}MB")
+                                    break  # Only need first (and usually only) row per file
+                        
+                        # Also try to extract worker data from log patterns (fallback)
+                        worker_summary_matches = re.findall(r'Merging summary from device ([^\s]+)', content)
+                        for device_name in worker_summary_matches:
+                            logger.info(f"Found worker summary reference: {device_name}")
+                            # Future enhancement: could extract more detailed worker info from logs
+                        
+                    except Exception as e:
+                        logger.warning(f"Could not extract CPU/memory metrics from device CSV files: {e}")
 
             # Extract RPC/network metrics from log
             rpc_matches = re.findall(r'RPC total=([\d.]+)ms.*Est\. network=([\d.]+)ms', content)
@@ -704,6 +761,16 @@ class AutomatedSplitTester:
                             key = f'average_metrics_per_batch.{metric_name}'
                             metrics_sum[key] += metric_value
                             metrics_count[key] += 1
+                    
+                    # Add worker metrics
+                    worker_metrics = run_data.get('worker_metrics', {})
+                    for worker_rank, worker_data in worker_metrics.items():
+                        if isinstance(worker_data, dict):
+                            for metric_name, metric_value in worker_data.items():
+                                if metric_value is not None:
+                                    key = f'worker_metrics.{worker_rank}.{metric_name}'
+                                    metrics_sum[key] += metric_value
+                                    metrics_count[key] += 1
                 
                 # Calculate averages
                 averaged_split = {
@@ -711,7 +778,12 @@ class AutomatedSplitTester:
                     'split_index': split_index,
                     'static_network_delay_ms': static_network_delay_ms,
                     'system_inference_throughput_imgs_per_s': None,
-                    'average_metrics_per_batch': {}
+                    'average_metrics_per_batch': {},
+                    'worker_metrics': {
+                        'rank0': {'avg_cpu_usage_percent': None, 'avg_memory_usage_mb': None},
+                        'rank1': {'avg_cpu_usage_percent': None, 'avg_memory_usage_mb': None},
+                        'rank2': {'avg_cpu_usage_percent': None, 'avg_memory_usage_mb': None}
+                    }
                 }
                 
                 # Set averaged system throughput
@@ -732,11 +804,29 @@ class AutomatedSplitTester:
                                 averaged_split['average_metrics_per_batch'][metric_name] = int(avg_value)
                             elif metric_name == 'network_throughput_mbps':
                                 averaged_split['average_metrics_per_batch'][metric_name] = round(avg_value, 2)
+                            elif metric_name == 'avg_cpu_usage_percent':
+                                averaged_split['average_metrics_per_batch'][metric_name] = round(avg_value, 2)
+                            elif metric_name == 'avg_memory_usage_mb':
+                                averaged_split['average_metrics_per_batch'][metric_name] = round(avg_value, 2)
                             else:
                                 # For time-based metrics, use more precision
                                 averaged_split['average_metrics_per_batch'][metric_name] = round(avg_value, 6)
                         else:
                             averaged_split['average_metrics_per_batch'][metric_name] = None
+                
+                # Set averaged worker metrics
+                for key in metrics_sum:
+                    if key.startswith('worker_metrics.'):
+                        # Parse worker_metrics.rank0.avg_cpu_usage_percent
+                        parts = key.split('.')
+                        if len(parts) == 3:
+                            worker_rank = parts[1]
+                            metric_name = parts[2]
+                            if metrics_count[key] > 0:
+                                avg_value = metrics_sum[key] / metrics_count[key]
+                                averaged_split['worker_metrics'][worker_rank][metric_name] = round(avg_value, 2)
+                            else:
+                                averaged_split['worker_metrics'][worker_rank][metric_name] = None
                 
                 averaged_results[split_id] = averaged_split
             
