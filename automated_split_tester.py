@@ -316,8 +316,10 @@ class AutomatedSplitTester:
             full_host = f"{self.pi_user}@{host}"
             
             try:
-                # Find the most recent device_metrics file for this worker
-                find_cmd = f"ls -t {self.project_path}/metrics/device_metrics_*rank_{rank}_*.csv | head -1"
+                # Workers save to the session-specific directory passed via --metrics-dir
+                # The metrics_dir parameter contains the local path, we need the corresponding remote path
+                remote_metrics_dir = metrics_dir.replace(os.path.expanduser("~"), self.project_path)
+                find_cmd = f"ls -t {remote_metrics_dir}/device_metrics_*rank_{rank}_*.csv 2>/dev/null | head -1"
                 result = subprocess.run(
                     ["ssh", full_host, find_cmd],
                     capture_output=True,
