@@ -232,10 +232,31 @@ class DistributedPipelineWorker:
         try:
             self.logger.debug(f"RPC processing batch {batch_id} at stage {self.stage_id}")
             
+            # Log input tensor shape
+            self.logger.info(f"[FORWARD PASS] Shard {self.stage_id} received tensor shape: {batch_data.shape}, batch_id={batch_id}")
+            
+            # Time the actual computation
+            compute_start = time.time()
             with torch.no_grad():
                 batch_data = batch_data.to("cpu")
-                output = self.shard_module(batch_data)
+                
+                # Use payload measurement method if available, otherwise fall back to direct call
+                if hasattr(self.shard_module, 'forward_with_payload_measurement'):
+                    self.logger.info(f"[PIPELINE] Using payload measurement for shard {self.stage_id}")
+                    output = self.shard_module.forward_with_payload_measurement(batch_data, batch_id)
+                else:
+                    self.logger.info(f"[PIPELINE] Using direct shard call for shard {self.stage_id}")
+                    output = self.shard_module(batch_data)
+                    
                 result = output.cpu()
+            compute_end = time.time()
+            
+            # Calculate times
+            compute_time_ms = (compute_end - compute_start) * 1000
+            
+            # Log timing information in the format expected by automated_split_tester
+            self.logger.info(f"[FORWARD PASS] Shard {self.stage_id} computation completed in {compute_time_ms:.2f}ms")
+            self.logger.info(f"[SHARD_TIMING] shard_{self.stage_id} processing_time_ms={compute_time_ms:.2f} batch_id={batch_id}")
             
             end_time = time.time()
             processing_time = end_time - start_time
@@ -451,20 +472,28 @@ class PipelineManager:
         if 0 in self.rpc_workers:
             worker_name, rpc_worker = self.rpc_workers[0]
             
+            # Calculate the input tensor size for the first stage (this is what we're sending)
+            input_tensor_size_mb = (data.numel() * data.element_size()) / (1024 * 1024)
+            
+            # Track RPC start time
+            rpc_start_time = time.time()
+            batch.stage_times[0] = (rpc_start_time, None)
+            
             # Create future for first stage
             future = rpc_worker.rpc_async().process_batch_rpc(data, batch_id)
             
-            # Set up continuation for subsequent stages
-            self._setup_pipeline_continuation(future, batch_id, 0)
+            # Set up continuation for subsequent stages, passing the input tensor size
+            self._setup_pipeline_continuation(future, batch_id, 0, input_tensor_size_mb)
         
         return batch_id
     
-    def _setup_pipeline_continuation(self, future, batch_id: int, completed_stage: int):
+    def _setup_pipeline_continuation(self, future, batch_id: int, completed_stage: int, input_tensor_size_mb: float = 0.0):
         """Set up continuation for the next stage in the pipeline."""
         def continue_pipeline():
             try:
                 # Get result from completed stage
                 result = future.wait()
+                rpc_end_time = time.time()
                 
                 # Update batch data
                 if batch_id in self.active_batches:
@@ -474,17 +503,40 @@ class PipelineManager:
                     
                     # Record completion time for this stage
                     if completed_stage not in batch.stage_times:
-                        batch.stage_times[completed_stage] = (batch.start_time, time.time())
+                        batch.stage_times[completed_stage] = (batch.start_time, rpc_end_time)
+                    else:
+                        # Update end time
+                        start_time = batch.stage_times[completed_stage][0]
+                        batch.stage_times[completed_stage] = (start_time, rpc_end_time)
+                        
+                        # Calculate and log RPC timing
+                        rpc_time_ms = (rpc_end_time - start_time) * 1000
+                        
+                        # Use the INPUT tensor size that was sent (not the output)
+                        tensor_size_mb = input_tensor_size_mb
+                        estimated_network_ms = 0.5 + (tensor_size_mb * 0.3) + (tensor_size_mb * 8 / 940) * 1000 * 2
+                        
+                        # Log timing information
+                        self.logger.info(f"[FORWARD SEQUENTIAL] RPC call to shard {completed_stage} completed in {rpc_time_ms:.2f}ms")
+                        self.logger.info(f"[NETWORK_TIMING] shard_{completed_stage} network_time_ms={estimated_network_ms:.2f} tensor_size_mb={tensor_size_mb:.2f} batch_id={batch_id}")
                     
                     # Check if there's a next stage
                     next_stage = completed_stage + 1
                     if next_stage < len(self.shards) and next_stage in self.rpc_workers:
                         # Start next stage
                         worker_name, rpc_worker = self.rpc_workers[next_stage]
+                        
+                        # Calculate the input tensor size for the next stage (this is what we're sending)
+                        next_input_tensor_size_mb = (result.numel() * result.element_size()) / (1024 * 1024)
+                        
+                        # Track RPC start time for network timing
+                        rpc_start_time = time.time()
+                        batch.stage_times[next_stage] = (rpc_start_time, None)  # Start time for next stage
+                        
                         next_future = rpc_worker.rpc_async().process_batch_rpc(result, batch_id)
                         
-                        # Set up continuation for next stage
-                        self._setup_pipeline_continuation(next_future, batch_id, next_stage)
+                        # Set up continuation for next stage, passing the input size
+                        self._setup_pipeline_continuation(next_future, batch_id, next_stage, next_input_tensor_size_mb)
                     else:
                         # Pipeline complete
                         batch.completed = True

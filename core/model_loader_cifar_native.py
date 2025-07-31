@@ -21,9 +21,9 @@ class ModelLoaderCifarNative(ModelLoader):
             "weight_file": "resnet18_cifar10.pth",
             "input_size": (32, 32),  # Native CIFAR-10 size!
         },
-        "squeezenet": {
-            "model_class": ModelLoader.SUPPORTED_MODELS["squeezenet"]["model_class"],
-            "weight_file": "squeezenet_cifar10.pth",
+        "resnet50": {
+            "model_class": ModelLoader.SUPPORTED_MODELS["resnet50"]["model_class"],
+            "weight_file": "resnet50_100epochs_jul17.pth",
             "input_size": (32, 32),  # Native CIFAR-10 size!
         },
         # Keep others at original size for compatibility

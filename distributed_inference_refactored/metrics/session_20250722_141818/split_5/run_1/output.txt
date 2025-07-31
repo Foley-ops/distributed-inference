@@ -1,3 +1,0 @@
-2025-07-22 14:18:26,094 - INFO - Started real-time monitoring for PlamaLV_rank_0
-2025-07-22 14:18:26,094 - INFO - [PlamaLV:rank0] - Starting enhanced distributed inference
-2025-07-22 14:18:26,094 - INFO - [PlamaLV:rank0] - [DIST] Initializing process group at tcp://10.100.117.1:44445

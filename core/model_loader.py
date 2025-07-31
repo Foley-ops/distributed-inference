@@ -26,28 +26,28 @@ class ModelLoader:
         },
         "inceptionv3": {
             "model_class": torchvision_models.inception_v3,
-            "weight_file": "inception_cifar10.pth",
+            "weight_file": "inception_100epochs_jul16.pth",
             "input_size": (299, 299),
             "init_kwargs": {"aux_logits": False}
         },
         "alexnet": {
             "model_class": torchvision_models.alexnet,
-            "weight_file": "alexnet_cifar10_25epochs.pth",
+            "weight_file": "alexnet_100epochs_jul16.pth",
             "input_size": (224, 224)
         },
         "resnet18": {
             "model_class": torchvision_models.resnet18,
-            "weight_file": "resnet18_cifar10.pth",
+            "weight_file": "resnet18_100epochs_jul16.pth",
             "input_size": (224, 224)
         },
-        "squeezenet": {
-            "model_class": torchvision_models.squeezenet1_1,
-            "weight_file": "squeezenet_cifar10.pth",
+        "resnet50": {
+            "model_class": torchvision_models.resnet50,
+            "weight_file": "resnet50_100epochs_jul17.pth",
             "input_size": (224, 224)
         },
         "vgg16": {
             "model_class": torchvision_models.vgg16,
-            "weight_file": "vgg16_cifar10_25epochs.pth",
+            "weight_file": "vgg16_100epochs_jul16.pth",
             "input_size": (224, 224)
         }
     }
@@ -114,9 +114,8 @@ class ModelLoader:
         elif model_type == "resnet18":
             model.fc = nn.Linear(model.fc.in_features, num_classes)
         
-        elif model_type == "squeezenet":
-            model.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1))
-            model.num_classes = num_classes
+        elif model_type == "resnet50":
+            model.fc = nn.Linear(model.fc.in_features, num_classes)
         
         elif model_type == "vgg16":
             model.classifier[6] = nn.Linear(model.classifier[6].in_features, num_classes)

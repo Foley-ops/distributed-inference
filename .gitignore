@@ -262,6 +262,9 @@ test_metrics*/
 *.tar.gz
 *.rar
 *.7z
+.serena
+
+profiles/*
 
 # Ignore temporary model downloads
 temp_models/
@@ -284,3 +287,4 @@ metrics/*
 enhanced_metrics/*
 
 delete/*
+*.png

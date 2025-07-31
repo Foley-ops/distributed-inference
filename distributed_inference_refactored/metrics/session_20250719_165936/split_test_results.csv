@@ -1,5 +1,0 @@
-split_block,run,status,start_time,end_time,output_file,error
-0,1,success,2025-07-19 16:59:36,2025-07-19 17:00:57,./metrics/session_20250719_165936/split_0/run_1/output.txt,
-0,2,success,2025-07-19 17:01:02,2025-07-19 17:02:23,./metrics/session_20250719_165936/split_0/run_2/output.txt,
-0,3,success,2025-07-19 17:02:28,2025-07-19 17:03:49,./metrics/session_20250719_165936/split_0/run_3/output.txt,
-0,4,success,2025-07-19 17:03:54,2025-07-19 17:05:15,./metrics/session_20250719_165936/split_0/run_4/output.txt,

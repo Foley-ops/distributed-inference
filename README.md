@@ -45,7 +45,7 @@ optimized_distributed_inference/
 │   ├── mobilenetv2_cifar10.pth
 │   ├── resnet18_cifar10.pth
 │   ├── inception_cifar10.pth
-│   └── squeezenet_cifar10.pth
+│   └── resnet50_cifar10.pth
 ├── distributed_runner.py       # Main distributed script
 ├── single_device.py             # Single device baseline
 ├── test_*.py                    # Test scripts
@@ -100,7 +100,7 @@ python distributed_runner.py \
 python distributed_runner.py \
     --rank 0 \
     --world-size 2 \
-    --model squeezenet \
+    --model resnet50 \
     --dataset dummy \
     --num-test-samples 50
 ```
@@ -147,7 +147,7 @@ This system is ideal for research into:
 - InceptionV3  
 - AlexNet
 - ResNet18
-- SqueezeNet
+- ResNet50
 - VGG16
 
 All models are pre-configured for CIFAR-10 classification but can be easily adapted for other datasets.
