@@ -143,8 +143,8 @@ def get_default_split_ranges(model_type: str) -> List[int]:
     info = get_model_split_info(model_type)
     max_splits = info['max_splits']
     
-    # Return ALL split points from 0 to max_splits
-    return list(range(max_splits + 1))  # 0 to max_splits inclusive
+    # Return ALL split points from 1 to max_splits
+    return list(range(1, max_splits + 1))  # 1 to max_splits inclusive
 
 
 if __name__ == "__main__":

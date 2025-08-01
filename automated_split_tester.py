@@ -520,7 +520,7 @@ class AutomatedSplitTester:
         metrics = {
             'model_name': model_name,
             'split_index': None,
-            'static_network_delay_ms': 0.094,  # Static for now, could be calculated
+            'static_network_delay_ms': 0.4015,  # Measured ping RTT between Pis
             'system_inference_throughput_imgs_per_s': None,
             'average_metrics_per_batch': {
                 'part1_inference_time_s': None,
@@ -756,9 +756,9 @@ class AutomatedSplitTester:
 
             # Set default values if not found
             if metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] is None:
-                # Default intermediate size based on typical layer outputs
-                # This is just an estimate - actual size depends on model and split point
-                metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = 8 * 32 * 56 * 56 * 4
+                # CRITICAL: Return 0 instead of estimate when real measurement is missing
+                metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = 0
+                logger.warning("No intermediate data size found - setting to 0 (not using fallback estimate)")
             
             # Calculate network throughput if we have both data size and network time
             # This needs to be done after setting default values
@@ -779,18 +779,9 @@ class AutomatedSplitTester:
                 metrics['average_metrics_per_batch']['end_to_end_latency_s'] = time_per_batch
                 logger.info(f"End-to-end latency from throughput: {time_per_batch:.3f}s per batch")
             else:
-                # Fallback: sum of components (only valid for non-pipelined)
-                # This should rarely be used since we always have throughput
-                if (metrics['average_metrics_per_batch']['part1_inference_time_s'] is not None and
-                    metrics['average_metrics_per_batch']['part2_inference_time_s'] is not None and
-                    metrics['average_metrics_per_batch']['network_time_s'] is not None):
-                    fallback_latency = (
-                        metrics['average_metrics_per_batch']['part1_inference_time_s'] +
-                        metrics['average_metrics_per_batch']['part2_inference_time_s'] +
-                        metrics['average_metrics_per_batch']['network_time_s']
-                    )
-                    metrics['average_metrics_per_batch']['end_to_end_latency_s'] = fallback_latency
-                    logger.warning(f"Using fallback end_to_end calculation (non-pipelined): {fallback_latency:.3f}s")
+                # CRITICAL: Return 0 instead of fallback calculation
+                metrics['average_metrics_per_batch']['end_to_end_latency_s'] = 0
+                logger.warning("No throughput found - setting end_to_end_latency to 0 (not using fallback calculation)")
 
             return metrics
 
@@ -1066,7 +1057,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Automated split testing for distributed inference")
     parser.add_argument("--splits", nargs='+', type=int,
-                       help="Specific split blocks to test (default: all 0-18)")
+                       help="Specific split blocks to test (default: all 1-18 for mobilenetv2)")
     parser.add_argument("--runs", type=int, default=3,
                        help="Number of runs per split (default: 3)")
     parser.add_argument("--wait-time", type=int, default=60,
