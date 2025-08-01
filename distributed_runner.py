@@ -520,8 +520,9 @@ class EnhancedDistributedModel(nn.Module):
             return split_model_into_n_shards(self.original_model, self.num_splits)
         except Exception as e:
             self.logger.error(f"Failed to use traditional splitting: {e}")
-            # Fallback: just return the whole model as one shard
-            return [self.original_model]
+            # Fallback to block-level splitting instead of returning whole model
+            self.logger.info("Falling back to block-level splitting")
+            return self._split_model_block_level()
 
     def _split_model_block_level(self) -> List[nn.Module]:
         """Block-level model splitting (like reference implementation)."""
