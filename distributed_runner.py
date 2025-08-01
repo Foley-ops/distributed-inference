@@ -526,6 +526,11 @@ class EnhancedDistributedModel(nn.Module):
 
     def _split_model_block_level(self) -> List[nn.Module]:
         """Block-level model splitting (like reference implementation)."""
+        
+        # Handle ResNet models differently since they don't have 'features' attribute
+        if self.model_type.lower() in ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152']:
+            return self._split_resnet_model()
+        
         feature_blocks = list(self.original_model.features.children())
         total_blocks = len(feature_blocks)
 
@@ -612,6 +617,78 @@ class EnhancedDistributedModel(nn.Module):
         self.logger.info(f"Shard 2 parameters: {shard2_params:,} ({shard2_params/total_params*100:.1f}%)")
         self.logger.info(f"Split ratio: Shard1={shard1_params/total_params*100:.1f}%, Shard2={shard2_params/total_params*100:.1f}%")
 
+        return [shard1, shard2]
+
+    def _split_resnet_model(self) -> List[nn.Module]:
+        """ResNet-specific model splitting."""
+        # ResNet structure:
+        # - conv1, bn1, relu, maxpool (initial layers)
+        # - layer1, layer2, layer3, layer4 (residual blocks)
+        # - avgpool, fc (final layers)
+        
+        # Build a flat list of all modules to match the split point indexing
+        all_modules = []
+        module_names = []
+        
+        # Add initial layers
+        initial_layers = ['conv1', 'bn1', 'relu', 'maxpool']
+        for name in initial_layers:
+            if hasattr(self.original_model, name):
+                all_modules.append(getattr(self.original_model, name))
+                module_names.append(name)
+        
+        # Add individual blocks from each layer
+        for layer_name in ['layer1', 'layer2', 'layer3', 'layer4']:
+            if hasattr(self.original_model, layer_name):
+                layer = getattr(self.original_model, layer_name)
+                for i, block in enumerate(layer.children()):
+                    all_modules.append(block)
+                    module_names.append(f"{layer_name}[{i}]")
+        
+        total_split_points = len(all_modules)
+        self.logger.info(f"ResNet has {total_split_points} potential split points")
+        
+        # Determine split point
+        if self.split_block is not None:
+            split_point = self.split_block
+            self.logger.info(f"Using user-specified split block: {split_point}")
+        else:
+            # Default to splitting in the middle
+            split_point = total_split_points // 2
+        
+        # Validate split point
+        if split_point < 1 or split_point >= total_split_points:
+            self.logger.warning(f"Split point {split_point} is out of range [1, {total_split_points-1}], adjusting")
+            split_point = max(1, min(total_split_points - 1, total_split_points // 2))
+        
+        self.logger.info(f"Splitting ResNet after module {split_point}: {module_names[split_point-1] if split_point > 0 else 'start'}")
+        
+        # Create shard 1: Everything up to split point
+        shard1_modules = all_modules[:split_point]
+        shard1 = nn.Sequential(*shard1_modules)
+        
+        # Create shard 2: Everything after split point + final layers
+        shard2_modules = all_modules[split_point:]
+        
+        # Add final layers
+        shard2_modules.append(self.original_model.avgpool)
+        shard2_modules.append(nn.Flatten())
+        shard2_modules.append(self.original_model.fc)
+        
+        shard2 = nn.Sequential(*shard2_modules)
+        
+        # Log partition details
+        shard1_params = sum(p.numel() for p in shard1.parameters())
+        shard2_params = sum(p.numel() for p in shard2.parameters())
+        total_params = shard1_params + shard2_params
+        
+        self.logger.info(f"Created 2 shards from ResNet split")
+        self.logger.info(f"Shard 1: modules 0-{split_point-1} ({', '.join(module_names[:split_point])})")
+        self.logger.info(f"Shard 2: modules {split_point}-end + avgpool, fc")
+        self.logger.info(f"Shard 1 parameters: {shard1_params:,} ({shard1_params/total_params*100:.1f}%)")
+        self.logger.info(f"Shard 2 parameters: {shard2_params:,} ({shard2_params/total_params*100:.1f}%)")
+        self.logger.info(f"Split ratio: Shard1={shard1_params/total_params*100:.1f}%, Shard2={shard2_params/total_params*100:.1f}%")
+        
         return [shard1, shard2]
 
     def _create_shard_configs(self) -> List[Dict[str, Any]]:
