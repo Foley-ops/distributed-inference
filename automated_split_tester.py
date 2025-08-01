@@ -566,17 +566,8 @@ class AutomatedSplitTester:
                     metrics['average_metrics_per_batch']['part2_inference_time_s'] = 0
                     logger.warning("No shard timing found - setting part1/part2 times to 0 (not using fallback estimates)")
 
-                    # Extract actual network times if available
-                    network_matches = re.findall(r'\[NETWORK_TIMING\] shard_\d+ network_time_ms=([\d.]+)', content)
-                    if network_matches:
-                        network_times_ms = [float(t) for t in network_matches]
-                        avg_network_ms = sum(network_times_ms) / len(network_times_ms)
-                        metrics['average_metrics_per_batch']['network_time_s'] = avg_network_ms / 1000.0
-                        logger.info(f"Average network time: {avg_network_ms:.2f}ms per RPC call")
-                    else:
-                        # CRITICAL: Return 0 for fallback instead of fake estimate
-                        metrics['average_metrics_per_batch']['network_time_s'] = 0
-                        logger.warning("No network timing found - setting to 0 (not using fallback estimate)")
+                    # Network time will be calculated later from RPC times minus compute times
+                    metrics['average_metrics_per_batch']['network_time_s'] = 0
 
             # Get the directory of the output file
             output_dir = os.path.dirname(output_file)
@@ -638,13 +629,30 @@ class AutomatedSplitTester:
                     metrics['average_metrics_per_batch']['network_time_s'] = avg_network_ms / 1000.0
 
             # Extract intermediate data size from NETWORK_TIMING logs (more accurate)
-            # Look for tensor_size_mb in network timing logs
-            tensor_size_matches = re.findall(r'\[NETWORK_TIMING\] shard_\d+ network_time_ms=[\d.]+ tensor_size_mb=([\d.]+)', content)
+            # Look for tensor_size_mb in network timing logs - specifically for shard_0 which is the intermediate output
+            tensor_size_pattern = r'\[NETWORK_TIMING\] shard_(\d+) network_time_ms=[\d.]+ tensor_size_mb=([\d.]+)'
+            tensor_size_matches = re.findall(tensor_size_pattern, content)
             if tensor_size_matches:
-                # Use the maximum tensor size (usually from shard_0)
-                max_tensor_size_mb = max(float(size) for size in tensor_size_matches)
-                # Convert MB to bytes
-                metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = int(max_tensor_size_mb * 1024 * 1024)
+                # Group by shard to get the output size of shard 0 (which is input to shard 1)
+                shard_tensor_sizes = {}
+                for shard_id, size_mb in tensor_size_matches:
+                    shard_id = int(shard_id)
+                    if shard_id not in shard_tensor_sizes:
+                        shard_tensor_sizes[shard_id] = []
+                    shard_tensor_sizes[shard_id].append(float(size_mb))
+                
+                # The intermediate data is the output of shard 0 (input to shard 1)
+                if 0 in shard_tensor_sizes and shard_tensor_sizes[0]:
+                    # Average the tensor sizes for shard 0
+                    avg_intermediate_size_mb = sum(shard_tensor_sizes[0]) / len(shard_tensor_sizes[0])
+                    # Convert MB to bytes
+                    metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = int(avg_intermediate_size_mb * 1024 * 1024)
+                    logger.info(f"Intermediate data size (shard 0 output): {avg_intermediate_size_mb:.2f} MB")
+                elif shard_tensor_sizes:
+                    # Fallback to any available size
+                    all_sizes = [size for sizes in shard_tensor_sizes.values() for size in sizes]
+                    avg_size_mb = sum(all_sizes) / len(all_sizes)
+                    metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] = int(avg_size_mb * 1024 * 1024)
             else:
                 # Fallback: try to extract from tensor shape logs
                 tensor_matches = re.findall(r'Sending tensor shape.*?torch\.Size\(\[(\d+), (\d+), (\d+), (\d+)\]\)', content)
@@ -710,6 +718,41 @@ class AutomatedSplitTester:
                     avg_ms = sum(shard_times[1]) / len(shard_times[1])
                     metrics['average_metrics_per_batch']['part2_inference_time_s'] = avg_ms / 1000.0
                     logger.info(f"Shard 1 average time: {avg_ms:.2f}ms per batch")
+                    
+                # Now calculate actual network times by parsing RPC times and subtracting compute times
+                # Extract RPC completion times from the output log
+                rpc_pattern = r'\[FORWARD SEQUENTIAL\] RPC call to shard (\d+) completed in ([\d.]+)ms'
+                rpc_matches = re.findall(rpc_pattern, content)
+                
+                if rpc_matches and shard_times:
+                    # Group RPC times by shard
+                    rpc_times = {}
+                    for shard_id, time_ms in rpc_matches:
+                        shard_id = int(shard_id)
+                        if shard_id not in rpc_times:
+                            rpc_times[shard_id] = []
+                        rpc_times[shard_id].append(float(time_ms))
+                    
+                    # Calculate network times for each shard
+                    network_times_ms = []
+                    
+                    for shard_id in rpc_times:
+                        if shard_id in shard_times and len(rpc_times[shard_id]) == len(shard_times[shard_id]):
+                            # Calculate network time for each batch
+                            for rpc_time, compute_time in zip(rpc_times[shard_id], shard_times[shard_id]):
+                                # Network time = RPC time - Compute time
+                                network_time = max(0, rpc_time - compute_time)
+                                network_times_ms.append(network_time)
+                                
+                    if network_times_ms:
+                        # Average network time across all shards and batches
+                        avg_network_ms = sum(network_times_ms) / len(network_times_ms)
+                        metrics['average_metrics_per_batch']['network_time_s'] = avg_network_ms / 1000.0
+                        logger.info(f"Calculated actual network time: {avg_network_ms:.2f}ms per RPC call")
+                    else:
+                        # Fallback to parsing NETWORK_TIMING logs (which are currently 0)
+                        metrics['average_metrics_per_batch']['network_time_s'] = 0
+                        logger.warning("Could not calculate network time from RPC/compute difference")
 
             # Set default values if not found
             if metrics['average_metrics_per_batch']['intermediate_data_size_bytes'] is None:
