@@ -134,8 +134,12 @@ class ModelSplitter:
         feature_blocks = list(model.features.children())
         total_blocks = len(feature_blocks)
         
-        if split_block is None:
+        # Only calculate default if split_block is None or 0
+        if split_block is None or split_block == 0:
             split_block = 8 if num_splits == 1 else total_blocks // (num_splits + 1)
+        
+        # Ensure split_block is within valid range
+        split_block = max(1, min(split_block, total_blocks - 1))
         
         logger.info(f"Splitting MobileNetV2 at block {split_block} of {total_blocks}")
         

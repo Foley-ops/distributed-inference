@@ -514,7 +514,8 @@ class PipelineManager:
                         
                         # Use the INPUT tensor size that was sent (not the output)
                         tensor_size_mb = input_tensor_size_mb
-                        estimated_network_ms = 0.5 + (tensor_size_mb * 0.3) + (tensor_size_mb * 8 / 940) * 1000 * 2
+                        # CRITICAL: Return 0 for network estimate instead of hardcoded values
+                        estimated_network_ms = 0  # Don't use fallback estimates
                         
                         # Log timing information
                         self.logger.info(f"[FORWARD SEQUENTIAL] RPC call to shard {completed_stage} completed in {rpc_time_ms:.2f}ms")

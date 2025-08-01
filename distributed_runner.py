@@ -875,8 +875,9 @@ class EnhancedDistributedModel(nn.Module):
             if self.metrics_collector:
                 rpc_total_ms = (end_time - start_time) * 1000
 
-                # Use the payload size measured before sending
-                estimated_network_ms = 0.5 + (tensor_size_mb * 0.3) + (tensor_size_mb * 8 / 940) * 1000 * 2  # RTT + serialize + transfer
+                # CRITICAL: Return 0 for network estimate instead of hardcoded values
+                # Real network timing should come from actual measurements
+                estimated_network_ms = 0  # Don't use fallback estimates
 
                 # The rest is computation time
                 estimated_computation_ms = max(0, rpc_total_ms - estimated_network_ms)
@@ -929,8 +930,9 @@ class EnhancedDistributedModel(nn.Module):
                 # Calculate network throughput using actual payload size
                 network_throughput_mbps = PayloadMeasurer.calculate_network_throughput_mbps(payload_size_mb, rpc_total_ms/1000.0)
                 
-                # Estimate network overhead using actual payload size
-                estimated_network_ms = 0.5 + (payload_size_mb * 0.3) + (payload_size_mb * 8 / 940) * 1000 * 2  # RTT + serialize + transfer
+                # CRITICAL: Return 0 for network estimate instead of hardcoded values
+                # Real network timing should come from actual measurements
+                estimated_network_ms = 0  # Don't use fallback estimates
                 estimated_computation_ms = max(0, rpc_total_ms - estimated_network_ms)
 
                 self.logger.info(f"[FORWARD SEQUENTIAL PAYLOAD] Shard {i} metrics: "

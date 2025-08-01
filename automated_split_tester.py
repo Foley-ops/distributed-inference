@@ -302,6 +302,10 @@ class AutomatedSplitTester:
         # After orchestrator completes, copy worker metrics files if they exist
         if success and metrics_dir:
             self._copy_worker_metrics(metrics_dir)
+        
+        # CRITICAL: Copy worker logs to get actual timing data
+        if success and run_dir:
+            self._copy_worker_logs(run_dir)
 
         end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -367,6 +371,41 @@ class AutomatedSplitTester:
 
 
 
+
+    def _copy_worker_logs(self, run_dir: str):
+        """Copy worker logs from Pi machines to get actual timing data."""
+        logger.info(f"Copying worker logs to {run_dir} for timing analysis...")
+        
+        for rank, host in self.pi_hosts.items():
+            full_host = f"{self.pi_user}@{host}"
+            worker_log = f"worker{rank}.log"
+            remote_path = f"{self.project_path}/{worker_log}"
+            local_path = os.path.join(run_dir, worker_log)
+            
+            try:
+                # Copy the worker log
+                scp_result = subprocess.run(
+                    ["scp", f"{full_host}:{remote_path}", local_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if scp_result.returncode == 0:
+                    logger.info(f"Copied worker {rank} log from {host} to {local_path}")
+                    
+                    # Extract timing info immediately
+                    timing_count = 0
+                    with open(local_path, 'r') as f:
+                        for line in f:
+                            if '[SHARD_TIMING]' in line:
+                                timing_count += 1
+                    logger.info(f"Found {timing_count} SHARD_TIMING entries in worker {rank} log")
+                else:
+                    logger.warning(f"Failed to copy worker {rank} log: {scp_result.stderr}")
+                    
+            except Exception as e:
+                logger.warning(f"Error copying log from worker {rank}: {e}")
 
     def test_all_splits(self, split_blocks: List[int] = None,
                        runs_per_split: int = 3,
@@ -521,10 +560,11 @@ class AutomatedSplitTester:
                 num_batches = total_images / batch_size
                 if num_batches > 0:
                     avg_batch_time = total_time / num_batches
-                    # Temporary estimates - will be overwritten if we find real shard timings
-                    # Don't use equal split - it's unrealistic
-                    metrics['average_metrics_per_batch']['part1_inference_time_s'] = avg_batch_time * 0.3
-                    metrics['average_metrics_per_batch']['part2_inference_time_s'] = avg_batch_time * 0.6
+                    # CRITICAL: Return 0 for fallback instead of fake estimates
+                    # This makes it obvious when real timing data is missing
+                    metrics['average_metrics_per_batch']['part1_inference_time_s'] = 0
+                    metrics['average_metrics_per_batch']['part2_inference_time_s'] = 0
+                    logger.warning("No shard timing found - setting part1/part2 times to 0 (not using fallback estimates)")
 
                     # Extract actual network times if available
                     network_matches = re.findall(r'\[NETWORK_TIMING\] shard_\d+ network_time_ms=([\d.]+)', content)
@@ -534,8 +574,9 @@ class AutomatedSplitTester:
                         metrics['average_metrics_per_batch']['network_time_s'] = avg_network_ms / 1000.0
                         logger.info(f"Average network time: {avg_network_ms:.2f}ms per RPC call")
                     else:
-                        # Fallback: Network time is estimated as 10% of batch time
-                        metrics['average_metrics_per_batch']['network_time_s'] = avg_batch_time * 0.1
+                        # CRITICAL: Return 0 for fallback instead of fake estimate
+                        metrics['average_metrics_per_batch']['network_time_s'] = 0
+                        logger.warning("No network timing found - setting to 0 (not using fallback estimate)")
 
             # Get the directory of the output file
             output_dir = os.path.dirname(output_file)
@@ -626,6 +667,30 @@ class AutomatedSplitTester:
             if not shard_matches:
                 # Fall back to old format
                 shard_matches = re.findall(r'Shard (\d+) computation completed in ([\d.]+)ms', content)
+            
+            # If no timing in main log, check worker logs in the same directory
+            if not shard_matches:
+                output_dir = os.path.dirname(output_file)
+                worker_logs_found = False
+                
+                # Check for worker1.log and worker2.log
+                for worker_num in [1, 2]:
+                    worker_log_path = os.path.join(output_dir, f"worker{worker_num}.log")
+                    if os.path.exists(worker_log_path):
+                        worker_logs_found = True
+                        logger.info(f"Parsing worker{worker_num}.log for timing data...")
+                        try:
+                            with open(worker_log_path, 'r') as f:
+                                worker_content = f.read()
+                            worker_matches = re.findall(r'\[SHARD_TIMING\] shard_(\d+) processing_time_ms=([\d.]+)', worker_content)
+                            if worker_matches:
+                                shard_matches.extend(worker_matches)
+                                logger.info(f"Found {len(worker_matches)} timing entries in worker{worker_num}.log")
+                        except Exception as e:
+                            logger.warning(f"Error reading worker{worker_num}.log: {e}")
+                
+                if worker_logs_found and shard_matches:
+                    logger.info(f"Successfully extracted timing from worker logs: {len(shard_matches)} total entries")
             
             if shard_matches:
                 shard_times = {}
